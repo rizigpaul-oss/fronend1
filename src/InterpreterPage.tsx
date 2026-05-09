@@ -233,36 +233,78 @@ export default function InterpreterPage() {
   const [signPreviewNote, setSignPreviewNote] = useState("");
 
   const recognitionRef = useRef<any>(null);
+  const shouldKeepListeningRef = useRef(false);
+  const spokenFinalRef = useRef("");
   const sessionIdRef = useRef<string>(sessionStorage.getItem("ksl_session_id") || "");
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       const rec = new SpeechRecognition();
-      rec.continuous = false;
-      rec.interimResults = false;
-      rec.lang = language === "kinyarwanda" ? "rw-RW" : language === "french" ? "fr-FR" : "en-US";
+      // Web Speech support for Kinyarwanda is inconsistent across browsers.
+      // Use a reliable locale so dictation remains usable on phones.
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.lang = language === "kinyarwanda" ? "en-US" : language === "french" ? "fr-FR" : "en-US";
       rec.onresult = (e: any) => {
-        const transcript = e.results[0][0].transcript;
-        setTextInput(transcript);
-        // Automatically trigger translation after voice input
-        fetchFingerSpellingExplicit(transcript);
+        let interim = "";
+        for (let i = e.resultIndex; i < e.results.length; i += 1) {
+          const part = (e.results[i][0]?.transcript || "").trim();
+          if (!part) continue;
+          if (e.results[i].isFinal) {
+            spokenFinalRef.current = `${spokenFinalRef.current} ${part}`.trim();
+          } else {
+            interim = `${interim} ${part}`.trim();
+          }
+        }
+        const combined = `${spokenFinalRef.current} ${interim}`.trim();
+        setTextInput(combined);
       };
       rec.onstart = () => setIsRecording(true);
-      rec.onend = () => setIsRecording(false);
-      rec.onerror = () => setIsRecording(false);
+      rec.onend = () => {
+        if (shouldKeepListeningRef.current) {
+          try {
+            rec.start();
+            return;
+          } catch {
+            // fallback to stopped state below
+          }
+        }
+        setIsRecording(false);
+      };
+      rec.onerror = () => {
+        if (!shouldKeepListeningRef.current) {
+          setIsRecording(false);
+          return;
+        }
+        // Let onend attempt automatic resume for transient mobile speech errors.
+      };
       recognitionRef.current = rec;
     }
+    return () => {
+      shouldKeepListeningRef.current = false;
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+    };
   }, [language]);
 
   const toggleRecording = () => {
+    if (!recognitionRef.current) {
+      setError("Voice recognition is not supported in this browser.");
+      return;
+    }
     if (isRecording) {
+      shouldKeepListeningRef.current = false;
       recognitionRef.current?.stop();
     } else {
       setError("");
+      const base = textInput.trim();
+      spokenFinalRef.current = base ? `${base} ` : "";
+      shouldKeepListeningRef.current = true;
       try {
         recognitionRef.current?.start();
-      } catch (e) {
+      } catch {
+        shouldKeepListeningRef.current = false;
         setError("Voice recognition failed to start.");
       }
     }
@@ -697,7 +739,7 @@ export default function InterpreterPage() {
                 {!cameraActive && (
                   <div className="relative z-10 flex flex-col items-center text-center px-4 gap-2 md:gap-4 border-none">
                     <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-ksl-blue/10 flex items-center justify-center text-ksl-blue animate-float border-none">
-                      <IcCamera size={24} />
+                      <IcCamera />
                     </div>
                     <div className="border-none">
                       <h4 className="font-bold text-[16px] md:text-[18px] mb-2 text-foreground border-none tracking-tight">{t.cameraTitle}</h4>
@@ -853,7 +895,7 @@ export default function InterpreterPage() {
                   /* Idle state */
                   <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 md:gap-4 opacity-70 border-none">
                     <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-ksl-yellow flex items-center justify-center text-[#111] border-none shadow-sm">
-                      <IcSwap size={24} />
+                      <IcSwap />
                     </div>
                     <div className="border-none">
                       <h4 className="font-bold text-[16px] md:text-[22px] mb-2 text-white border-none tracking-tight">{t.translatedWords}</h4>
