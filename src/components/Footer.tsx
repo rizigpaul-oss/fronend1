@@ -57,8 +57,10 @@ const Footer = () => {
   };
 
   return (
-    <footer className="w-full bg-background border-t border-border py-6 px-4 mt-8 md:mt-20">
-      <div className="max-w-[1128px] mx-auto flex flex-wrap items-center justify-center gap-x-4 md:gap-x-5 gap-y-2 md:gap-y-3 text-[12px] md:text-[13px] font-display font-light text-muted-foreground tracking-normal">
+    <footer className="w-full bg-background border-t border-white/5 py-10 px-6 mt-16 md:mt-24 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-ksl-blue/[0.02] pointer-events-none" />
+      <div className="max-w-[1280px] mx-auto relative z-10">
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4 text-[13px] font-medium text-muted-foreground/70 tracking-tight">
         {/* Brand/Copyright Section */}
         <div className="flex items-center gap-2 mr-2">
           <Link to="/" className="flex items-center gap-1 group">
@@ -134,6 +136,7 @@ const Footer = () => {
         <p className="text-[10px] text-center text-muted-foreground/50 font-display font-light">
           {taglines[language]}
         </p>
+      </div>
       </div>
     </footer>
   );

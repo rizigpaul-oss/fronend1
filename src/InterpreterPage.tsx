@@ -695,52 +695,52 @@ export default function InterpreterPage() {
   }, [status, cameraActive]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-background text-foreground font-sans overflow-x-hidden flex flex-col custom-scrollbar border-none">
-
+    <div className="min-h-screen bg-[#fafbfc] dark:bg-background text-foreground font-sans overflow-x-hidden flex flex-col custom-scrollbar border-none relative">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(59,130,246,0.05),transparent)] pointer-events-none" />
+      
       <Header />
 
       {/* ═══════════════ MAIN ═══════════════ */}
       <main className="flex-1 pt-20 md:pt-36 pb-12 container mx-auto px-4 md:px-6 flex flex-col items-center border-none">
 
         {/* Hero text */}
-        <div className="text-center max-w-3xl mx-auto mb-6 md:mb-12 relative z-10 border-none px-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-ksl-yellow text-slate-900 font-bold text-[10px] md:text-[13px] mb-4 md:mb-8 tracking-tight border-none shadow-sm shadow-ksl-yellow/20">
+        <div className="text-center max-w-3xl mx-auto mb-10 md:mb-16 relative z-10 border-none px-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-ksl-yellow/10 dark:bg-ksl-yellow/5 border border-ksl-yellow/20 text-ksl-yellow font-bold text-[11px] md:text-[13px] mb-6 md:mb-10 tracking-widest uppercase animate-float shadow-sm border-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-ksl-yellow animate-pulse" />
             {t.badge}
           </div>
           
-          {/* <h1 style={{ letterSpacing: "-0.04em" }} className="text-[50px] md:text-[75px] font-bold leading-[0.95] lowercase mb-6 text-foreground transition-colors border-none tracking-tight">
-            {t.heroTitle1}{" "}
-            <span className="text-ksl-blue drop-shadow-sm">{t.heroTitleItalic}</span>
-            <br className="hidden md:block"/>
-            {" "}{t.heroTitle2}
-          </h1> */}
+          <h1 className="text-[38px] md:text-[64px] font-bold leading-[1.1] mb-6 text-foreground tracking-tight border-none">
+            {language === 'kinyarwanda' ? 'Ihindurangenga' : 'KSL Interpreter'} 
+            <span className="text-ksl-blue">.</span>
+          </h1>
           
-          <p className="text-[14px] md:text-[20px] text-muted-foreground font-medium leading-snug md:leading-relaxed max-w-xl mx-auto tracking-tight border-none px-4 opacity-90">
+          <p className="text-[15px] md:text-[20px] text-muted-foreground font-medium leading-relaxed max-w-xl mx-auto tracking-tight border-none opacity-80">
             {t.heroDesc}
           </p>
         </div>
 
         {/* ─── Tab switcher ─── */}
-        <div className="bg-white dark:bg-[#111] p-1 md:p-2 rounded-full flex gap-1 md:gap-2 shadow-sm mb-6 md:mb-12 z-10 relative border-none">
+        <div className="bg-white/50 dark:bg-white/[0.03] backdrop-blur-sm p-1.5 rounded-3xl flex gap-1.5 shadow-xl shadow-black/[0.02] mb-10 md:mb-16 z-10 relative border border-slate-200 dark:border-white/5 transition-all">
           <button
             onClick={() => setActiveTab("sign-to-text")}
-            className={`flex items-center gap-1.5 md:gap-2 px-4 md:px-8 py-2 md:py-3.5 rounded-full text-[13px] md:text-[15px] font-bold transition-all duration-300 border-none ${
+            className={`flex items-center gap-2.5 px-6 md:px-10 py-3 md:py-4 rounded-2xl text-[14px] md:text-[16px] font-bold transition-all duration-300 border-none ${
               activeTab === "sign-to-text"
-                ? "bg-ksl-dark text-white shadow-md"
-                : "text-muted-foreground hover:bg-slate-50 dark:hover:bg-[#222] hover:text-foreground"
+                ? "bg-ksl-dark text-white shadow-xl shadow-ksl-dark/20 scale-[1.02]"
+                : "text-muted-foreground hover:bg-slate-100 dark:hover:bg-white/5 hover:text-foreground"
             }`}
           >
-            <IcCamera /> <span className="sm:inline">{t.tabSignToText}</span><span className="sm:hidden">Sign</span>
+            <IcCamera size={18} /> <span className="sm:inline">{t.tabSignToText}</span><span className="sm:hidden">Sign</span>
           </button>
           <button
             onClick={() => setActiveTab("text-to-sign")}
-            className={`flex items-center gap-1.5 md:gap-2 px-4 md:px-8 py-2 md:py-3.5 rounded-full text-[13px] md:text-[15px] font-bold transition-all duration-300 border-none ${
+            className={`flex items-center gap-2.5 px-6 md:px-10 py-3 md:py-4 rounded-2xl text-[14px] md:text-[16px] font-bold transition-all duration-300 border-none ${
               activeTab === "text-to-sign"
-                ? "bg-ksl-blue text-white shadow-md"
-                : "text-muted-foreground hover:bg-slate-50 dark:hover:bg-[#222] hover:text-foreground"
+                ? "bg-ksl-blue text-white shadow-xl shadow-ksl-blue/20 scale-[1.02]"
+                : "text-muted-foreground hover:bg-slate-100 dark:hover:bg-white/5 hover:text-foreground"
             }`}
           >
-            <IcType /> <span className="sm:inline">{t.tabTextToSign}</span><span className="sm:hidden">Text</span>
+            <IcType size={18} /> <span className="sm:inline">{t.tabTextToSign}</span><span className="sm:hidden">Text</span>
           </button>
         </div>
 
@@ -748,14 +748,18 @@ export default function InterpreterPage() {
         <div className="w-full max-w-[1100px] grid md:grid-cols-2 gap-[18px] border-none relative z-10">
 
           {/* LEFT card: Input */}
-          <div className="bg-white dark:bg-[#111] border-none rounded-[1rem] md:rounded-[2rem] p-4 md:p-8 lg:p-10 flex flex-col gap-4 md:gap-6 shadow-sm relative overflow-hidden transition-all">
-            <h3 className="font-bold text-[16px] md:text-[18px] tracking-tight border-none text-foreground">
-              {activeTab === "sign-to-text" ? t.leftCardCamera : t.leftCardText}
-            </h3>
+          <div className="bg-white/80 dark:bg-white/[0.02] backdrop-blur-md border border-slate-200 dark:border-white/5 rounded-[2rem] p-5 md:p-10 flex flex-col gap-6 md:gap-8 shadow-2xl shadow-black/[0.02] relative overflow-hidden group/card transition-all hover:shadow-black/[0.04]">
+            <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-white/5">
+              <div className="w-1.5 h-6 bg-ksl-blue rounded-full" />
+              <h3 className="font-bold text-[14px] md:text-[16px] tracking-[0.1em] uppercase text-foreground/60">
+                {activeTab === "sign-to-text" ? t.leftCardCamera : t.leftCardText}
+              </h3>
+            </div>
 
             {activeTab === "sign-to-text" ? (
               /* Camera view */
-              <div className="relative bg-slate-50 dark:bg-[#0a0a0a] rounded-[1.5rem] overflow-hidden aspect-video flex flex-col items-center justify-center border-none">
+              <div className="relative bg-slate-900 rounded-[2rem] overflow-hidden aspect-video flex flex-col items-center justify-center border border-white/5 shadow-2xl shadow-black/20 group/video">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 pointer-events-none opacity-0 group-hover/video:opacity-100 transition-opacity duration-500" />
                 <video
                   ref={videoRef}
                   autoPlay playsInline muted
@@ -794,62 +798,67 @@ export default function InterpreterPage() {
                 )}
               </div>
             ) : (
-              /* Text input */
-              <div className="flex flex-col gap-4 flex-1 border-none">
-                <textarea
-                  value={textInput}
-                  onChange={e => setTextInput(e.target.value)}
-                  placeholder={t.textPlaceholder}
-                  className="flex-1 min-h-[180px] md:min-h-[220px] bg-slate-50 dark:bg-[#0a0a0a] rounded-[1.5rem] p-5 md:p-6 text-foreground placeholder:text-muted-foreground text-[15px] md:text-[16px] font-medium resize-none focus:outline-none transition-colors border-none"
-                />
+              <div className="flex flex-col h-full border-none">
+                <div className="flex-1 relative mb-6">
+                  <textarea
+                    value={textInput}
+                    onChange={e => setTextInput(e.target.value)}
+                    placeholder={t.textPlaceholder}
+                    className="w-full h-full min-h-[220px] md:min-h-[260px] bg-slate-50 dark:bg-white/[0.03] rounded-[1.5rem] p-6 text-foreground placeholder:text-muted-foreground/50 text-[15px] md:text-[17px] font-medium resize-none transition-all border border-slate-200 dark:border-white/5 outline-none focus:border-ksl-blue/50"
+                  />
+                  <div className="absolute bottom-4 right-4 text-[11px] font-bold text-muted-foreground/40 tracking-widest uppercase">
+                    UTF-8 Character Stream
+                  </div>
+                </div>
                 
-                <div className="flex flex-col sm:flex-row gap-[12px] border-none">
+                <div className="grid grid-cols-12 gap-3 mt-auto">
                   <button
                     onClick={toggleRecording}
                     disabled={loading}
-                    className={`flex-1 h-[52px] rounded-full flex items-center justify-center gap-2 transition-all font-bold text-[15px] border-none shadow-sm ${
+                    className={`col-span-5 h-[56px] rounded-2xl flex items-center justify-center gap-2.5 transition-all font-bold text-[14px] shadow-sm border-none ${
                       isRecording 
                         ? "bg-red-500 text-white animate-pulse" 
-                        : "bg-slate-100 dark:bg-[#222] text-foreground hover:bg-slate-200 dark:hover:bg-[#333]"
+                        : "bg-slate-100 dark:bg-white/5 text-foreground hover:bg-slate-200 dark:hover:bg-white/10"
                     }`}
                   >
                     <FiMic className={`text-[18px] ${isRecording ? "text-white" : ""}`} />
-                    {isRecording ? "Listening..." : t.recordBtn}
+                    <span className="truncate">{isRecording ? "Listening" : "Record"}</span>
                   </button>
                   
                   <button
                     onClick={fetchFingerSpelling}
                     disabled={loading || !textInput.trim()}
-                    className="flex-1 h-[52px] rounded-full bg-ksl-blue text-white font-bold text-[15px] shadow-sm hover:bg-ksl-blue/90 active:scale-[0.98] transition-all disabled:opacity-50 border-none"
+                    className="col-span-5 h-[56px] rounded-2xl bg-ksl-blue text-white font-bold text-[14px] shadow-lg shadow-ksl-blue/20 hover:bg-ksl-blue/90 active:scale-[0.98] transition-all disabled:opacity-50 border-none flex items-center justify-center gap-2"
                   >
-                    {t.translateBtn}
+                    <IcType size={16} />
+                    <span className="truncate">Translate</span>
                   </button>
+
                   <button
                     onClick={resetTextToSignInput}
                     disabled={loading || (!textInput.trim() && signPreviewItems.length === 0)}
-                    className="h-[52px] px-5 rounded-full bg-slate-100 dark:bg-[#222] text-foreground font-bold text-[14px] shadow-sm hover:bg-slate-200 dark:hover:bg-[#333] active:scale-[0.98] transition-all disabled:opacity-50 border-none flex items-center justify-center gap-2"
-                    title="Reset text and output"
+                    className="col-span-2 h-[56px] rounded-2xl bg-slate-100 dark:bg-white/5 text-foreground flex items-center justify-center hover:bg-slate-200 dark:hover:bg-white/10 transition-all disabled:opacity-30 border-none"
+                    title="Reset"
                   >
-                    <FiRotateCcw className="text-[16px]" />
-                    <span className="hidden sm:inline">Reset</span>
+                    <FiRotateCcw className="text-[18px]" />
                   </button>
                 </div>
               </div>
             )}
 
-            {/* Language selector */}
+            {/* Language selector footer */}
             {activeTab === "sign-to-text" && (
-              <div className="flex items-center gap-4 mt-2 border-none">
-                <span className="text-[12px] font-bold text-muted-foreground uppercase tracking-widest border-none">{t.outputLangLabel}</span>
-                <div className="flex bg-slate-50 dark:bg-[#222] rounded-full p-1 gap-0.5 border-none overflow-x-auto no-scrollbar">
-                  {[["rw", "🇷🇼", "Kinyarwanda"], ["en", "🇺🇸", "English"], ["fr", "🇫🇷", "French"]].map(([v, flag, label]) => (
+              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
+                <span className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-widest">{t.outputLangLabel}</span>
+                <div className="flex bg-slate-50 dark:bg-white/5 rounded-xl p-1 gap-1 border border-slate-200 dark:border-white/10">
+                  {[["rw", "🇷🇼", "RW"], ["en", "🇺🇸", "EN"], ["fr", "🇫🇷", "FR"]].map(([v, flag, label]) => (
                     <button
                       key={v}
                       onClick={() => setOutputLang(v)}
-                      className={`px-3 md:px-4 py-1 rounded-full text-[13px] font-bold transition-all border-none whitespace-nowrap flex items-center gap-1.5 ${outputLang === v ? "bg-ksl-blue text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                      className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all border-none flex items-center gap-2 ${outputLang === v ? "bg-ksl-blue text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                     >
                       <span>{flag}</span>
-                      <span className="hidden sm:inline">{label}</span>
+                      <span>{label}</span>
                     </button>
                   ))}
                 </div>
@@ -858,12 +867,18 @@ export default function InterpreterPage() {
           </div>
 
           {/* RIGHT card: Output */}
-          <div className="bg-white dark:bg-[#111] border-none rounded-[1rem] md:rounded-[2rem] p-4 md:p-8 lg:p-10 flex flex-col gap-4 md:gap-6 shadow-sm border-none backdrop-blur-sm relative overflow-hidden">
-            <div className="flex items-center justify-between border-none z-10 relative">
-              <h3 className="font-bold text-[16px] md:text-[18px] tracking-tight border-none text-foreground">{t.rightCard}</h3>
+          <div className="bg-ksl-dark dark:bg-white/[0.02] backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-[2rem] p-5 md:p-10 flex flex-col gap-6 md:gap-8 shadow-2xl relative overflow-hidden transition-all group/output min-h-[480px] md:min-h-[520px]">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent)] pointer-events-none" />
+            <div className="flex items-center justify-between border-b border-white/10 pb-4 z-10 relative">
+              <div className="flex items-center gap-2.5">
+                <div className="w-1.5 h-6 bg-ksl-yellow rounded-full" />
+                <h3 className="font-bold text-[14px] md:text-[16px] tracking-[0.1em] uppercase text-white/60">
+                  {t.rightCard}
+                </h3>
+              </div>
               {cameraActive && (
-                <div className="text-[13px] font-bold text-ksl-blue tabular-nums border-none bg-ksl-blue/10 px-4 py-1.5 rounded-full">
-                  ⏱ {runDuration}
+                <div className="text-[12px] font-bold text-ksl-blue tabular-nums border border-ksl-blue/30 bg-ksl-blue/10 px-4 py-1.5 rounded-xl">
+                  {runDuration}
                 </div>
               )}
             </div>
@@ -930,13 +945,16 @@ export default function InterpreterPage() {
                   </>
                 ) : (
                   /* Idle state */
-                  <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 md:gap-4 opacity-70 border-none">
-                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-ksl-yellow flex items-center justify-center text-[#111] border-none shadow-sm">
-                      <IcSwap />
+                  <div className="flex-1 flex flex-col items-center justify-center text-center gap-6 border-none group/idle">
+                    <div className="relative">
+                      <div className="absolute -inset-6 bg-ksl-yellow/10 blur-2xl rounded-full group-hover/idle:bg-ksl-yellow/20 transition-all" />
+                      <div className="relative w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 group-hover/idle:text-ksl-yellow transition-colors">
+                        <IcSwap size={32} />
+                      </div>
                     </div>
-                    <div className="border-none">
-                      <h4 className="font-bold text-[16px] md:text-[22px] mb-2 text-white border-none tracking-tight">{t.translatedWords}</h4>
-                      <p className="text-[13px] md:text-[15px] text-gray-400 max-w-[240px] md:max-w-[320px] leading-relaxed border-none">{t.translatedWordsDesc}</p>
+                    <div className="max-w-[280px] space-y-2">
+                      <h4 className="font-bold text-[18px] text-white/80 tracking-tight uppercase border-none">{t.translatedWords}</h4>
+                      <p className="text-[14px] text-white/30 leading-relaxed border-none font-medium">{t.translatedWordsDesc}</p>
                     </div>
                   </div>
                 )}
@@ -957,20 +975,20 @@ export default function InterpreterPage() {
               </div>
             )}
 
-            {/* Confidence + accuracy pill */}
-            <div className="flex items-center justify-between border-none mt-2 z-10 relative">
-              <div className="flex items-center gap-2.5 text-[13px] font-bold text-slate-500 border-none tracking-tight">
-                <span className="w-2.5 h-2.5 rounded-full bg-ksl-yellow border-[2px] border-ksl-yellow/30" />
+            {/* Confidence + accuracy footer */}
+            <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/10 z-10 relative">
+              <div className="flex items-center gap-3 text-[11px] font-bold text-white/40 tracking-widest uppercase">
+                <span className="flex gap-1">
+                  {[1,2,3].map(i => <div key={i} className={`w-1.5 h-1.5 rounded-full ${i <= (prediction.confidence * 3) ? 'bg-ksl-yellow shadow-[0_0_8px_rgba(255,204,0,0.5)]' : 'bg-white/10'}`} />)}
+                </span>
                 {t.accuracy} {Math.round(prediction.confidence * 100) || 95}%
               </div>
               <button
                 onClick={() => setShowLogs(p => !p)}
-                className="text-[13px] font-bold text-slate-400 hover:text-slate-600 transition-colors border-none underline-offset-4 hover:underline"
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold tracking-widest uppercase transition-all border ${showLogs ? 'bg-white/10 border-white/20 text-white' : 'bg-transparent border-white/5 text-white/30 hover:border-white/20 hover:text-white'}`}
               >
-                <span className="inline-flex items-center gap-1.5">
-                  {showLogs ? <FiLogOut className="text-[14px]" /> : <FiLogIn className="text-[14px]" />}
-                  {showLogs ? t.hideLogs : t.showLogs}
-                </span>
+                {showLogs ? <FiLogOut size={14} /> : <FiLogIn size={14} />}
+                {showLogs ? t.hideLogs : t.showLogs}
               </button>
             </div>
           </div>
@@ -986,18 +1004,26 @@ export default function InterpreterPage() {
 
         {/* Logs drawer */}
         {showLogs && (
-          <div className="w-full max-w-[1100px] mt-6 rounded-[2rem] bg-[#0a0a0a] p-8 overflow-hidden border-none shadow-xl relative z-10">
-            <div className="flex items-center justify-between mb-6 border-none">
-              <span className="text-[12px] font-black text-ksl-yellow uppercase tracking-widest border-none">Pipeline Telemetry</span>
-              <button onClick={() => setLogs([])} className="text-[12px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border-none">Flush</button>
+          <div className="w-full max-w-[1100px] mt-8 rounded-[2.5rem] bg-ksl-dark dark:bg-white/[0.02] backdrop-blur-xl p-8 overflow-hidden border border-white/5 shadow-2xl relative z-10">
+            <div className="flex items-center justify-between mb-8 border-none">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-ksl-blue animate-pulse" />
+                <span className="text-[12px] font-black text-white uppercase tracking-[0.2em] border-none opacity-80">Pipeline Telemetry</span>
+              </div>
+              <button onClick={() => setLogs([])} className="text-[12px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border-none">Flush Console</button>
             </div>
-            <div className="h-48 overflow-y-auto custom-scrollbar font-mono text-[12px] text-ksl-blue space-y-2 border-none px-2">
+            <div className="h-56 overflow-y-auto custom-scrollbar font-mono text-[12px] text-ksl-blue/90 space-y-2.5 border-none px-4">
               {logs.length > 0 ? logs.map((l, i) => (
-                <div key={i} className="flex gap-4 hover:bg-white/5 py-1 rounded border-none">
-                  <span className="text-gray-600 w-10 shrink-0 font-bold">{String(i).padStart(4, "0")}</span>
-                  <span className="break-all opacity-90">{l}</span>
+                <div key={i} className="flex gap-6 hover:bg-white/5 py-1.5 rounded-lg px-3 transition-colors border-none group/log">
+                  <span className="text-gray-700 w-12 shrink-0 font-bold group-hover/log:text-gray-500 transition-colors">{String(i).padStart(4, "0")}</span>
+                  <span className="break-all leading-relaxed">{l}</span>
                 </div>
-              )) : <p className="text-gray-600 font-medium">Waiting for backend streams...</p>}
+              )) : (
+                <div className="flex flex-col items-center justify-center h-full gap-4 opacity-40">
+                  <div className="w-12 h-12 rounded-full border-2 border-dashed border-ksl-blue/30 animate-spin-slow" />
+                  <p className="text-gray-500 font-medium tracking-tight">Listening for telemetry streams...</p>
+                </div>
+              )}
             </div>
           </div>
         )}
