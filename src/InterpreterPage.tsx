@@ -11,6 +11,7 @@ import {
   FiTrash2,
   FiVolume2,
   FiPlus,
+  FiRotateCcw,
   FiLogIn,
   FiLogOut,
 } from "react-icons/fi";
@@ -235,17 +236,23 @@ export default function InterpreterPage() {
   const recognitionRef = useRef<any>(null);
   const shouldKeepListeningRef = useRef(false);
   const spokenFinalRef = useRef("");
+  const speechLocaleIndexRef = useRef(0);
   const sessionIdRef = useRef<string>(sessionStorage.getItem("ksl_session_id") || "");
+
+  const speechLocales = useMemo(() => {
+    if (language === "kinyarwanda") return ["rw-RW", "sw-KE", "en-US"];
+    if (language === "french") return ["fr-FR", "fr", "en-US"];
+    return ["en-US"];
+  }, [language]);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       const rec = new SpeechRecognition();
-      // Web Speech support for Kinyarwanda is inconsistent across browsers.
-      // Use a reliable locale so dictation remains usable on phones.
       rec.continuous = true;
       rec.interimResults = true;
-      rec.lang = language === "kinyarwanda" ? "en-US" : language === "french" ? "fr-FR" : "en-US";
+      speechLocaleIndexRef.current = 0;
+      rec.lang = speechLocales[speechLocaleIndexRef.current];
       rec.onresult = (e: any) => {
         let interim = "";
         for (let i = e.resultIndex; i < e.results.length; i += 1) {
@@ -272,10 +279,16 @@ export default function InterpreterPage() {
         }
         setIsRecording(false);
       };
-      rec.onerror = () => {
+      rec.onerror = (e: any) => {
         if (!shouldKeepListeningRef.current) {
           setIsRecording(false);
           return;
+        }
+        const code = String(e?.error || "");
+        if (code === "language-not-supported" && speechLocaleIndexRef.current < speechLocales.length - 1) {
+          speechLocaleIndexRef.current += 1;
+          rec.lang = speechLocales[speechLocaleIndexRef.current];
+          setError(`Speech locale not supported; switched to ${rec.lang}.`);
         }
         // Let onend attempt automatic resume for transient mobile speech errors.
       };
@@ -286,7 +299,7 @@ export default function InterpreterPage() {
       recognitionRef.current?.stop();
       recognitionRef.current = null;
     };
-  }, [language]);
+  }, [speechLocales]);
 
   const toggleRecording = () => {
     if (!recognitionRef.current) {
@@ -300,6 +313,8 @@ export default function InterpreterPage() {
       setError("");
       const base = textInput.trim();
       spokenFinalRef.current = base ? `${base} ` : "";
+      speechLocaleIndexRef.current = 0;
+      recognitionRef.current.lang = speechLocales[speechLocaleIndexRef.current];
       shouldKeepListeningRef.current = true;
       try {
         recognitionRef.current?.start();
@@ -635,6 +650,19 @@ export default function InterpreterPage() {
     await fetchFingerSpellingExplicit(textInput);
   };
 
+  const resetTextToSignInput = () => {
+    if (isRecording) {
+      shouldKeepListeningRef.current = false;
+      recognitionRef.current?.stop();
+    }
+    spokenFinalRef.current = "";
+    setTextInput("");
+    setSignPreviewItems([]);
+    setSignSourceSnapshot("");
+    setSignPreviewNote("");
+    setError("");
+  };
+
   const fetchFingerSpellingExplicit = async (val: string) => {
     if (!val.trim()) return;
     setLoading(true);
@@ -795,6 +823,15 @@ export default function InterpreterPage() {
                     className="flex-1 h-[52px] rounded-full bg-ksl-blue text-white font-bold text-[15px] shadow-sm hover:bg-ksl-blue/90 active:scale-[0.98] transition-all disabled:opacity-50 border-none"
                   >
                     {t.translateBtn}
+                  </button>
+                  <button
+                    onClick={resetTextToSignInput}
+                    disabled={loading || (!textInput.trim() && signPreviewItems.length === 0)}
+                    className="h-[52px] px-5 rounded-full bg-slate-100 dark:bg-[#222] text-foreground font-bold text-[14px] shadow-sm hover:bg-slate-200 dark:hover:bg-[#333] active:scale-[0.98] transition-all disabled:opacity-50 border-none flex items-center justify-center gap-2"
+                    title="Reset text and output"
+                  >
+                    <FiRotateCcw className="text-[16px]" />
+                    <span className="hidden sm:inline">Reset</span>
                   </button>
                 </div>
               </div>
