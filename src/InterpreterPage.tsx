@@ -129,6 +129,7 @@ const translations = {
     translateBtn: "Hindura mu Kimenyetso",
     recordBtn: "Record & Translate",
     startTalking: "Vuga amagambo",
+    targetLang: "Ururimi rusohoka",
     detection: "Detection",
     waiting: "Gutegereza...",
   },
@@ -163,6 +164,7 @@ const translations = {
     translateBtn: "Translate to Sign",
     recordBtn: "Record & Translate",
     startTalking: "Talk to translate",
+    targetLang: "Target Language",
     detection: "Detection",
     waiting: "Loading...",
   },
@@ -197,6 +199,7 @@ const translations = {
     translateBtn: "Traduire en signe",
     recordBtn: "Record & Translate",
     startTalking: "Parler pour traduire",
+    targetLang: "Langue cible",
     detection: "Détection",
     waiting: "Chargement...",
   },
@@ -697,10 +700,8 @@ export default function InterpreterPage() {
                       <IcCamera size={24} />
                     </div>
                     <div className="border-none">
-                      <p className="font-bold text-[15px] md:text-[16px] text-foreground mb-0.5 border-none tracking-tight">{t.cameraTitle}</p>
-                      <p className="text-[12px] md:text-[13px] text-muted-foreground leading-snug max-w-[180px] md:max-w-[200px] border-none">
-                        {t.cameraDesc}
-                      </p>
+                      <h4 className="font-bold text-[16px] md:text-[18px] mb-2 text-foreground border-none tracking-tight">{t.cameraTitle}</h4>
+                      <p className="text-[13px] md:text-[14px] text-muted-foreground mb-6 max-w-[240px] leading-relaxed border-none">{t.cameraDesc}</p>
                     </div>
                     <button
                       onClick={startInterpreter}
@@ -855,8 +856,8 @@ export default function InterpreterPage() {
                       <IcSwap size={24} />
                     </div>
                     <div className="border-none">
-                      <p className="text-[15px] md:text-[16px] font-bold text-white mb-0.5 tracking-tight border-none">{t.translatedWords}</p>
-                      <p className="text-[12px] md:text-[13px] text-gray-400 max-w-[180px] md:max-w-[200px] mx-auto border-none leading-snug tracking-tight font-medium">{t.translatedWordsDesc}</p>
+                      <h4 className="font-bold text-[16px] md:text-[22px] mb-2 text-white border-none tracking-tight">{t.translatedWords}</h4>
+                      <p className="text-[13px] md:text-[15px] text-gray-400 max-w-[240px] md:max-w-[320px] leading-relaxed border-none">{t.translatedWordsDesc}</p>
                     </div>
                   </div>
                 )}
