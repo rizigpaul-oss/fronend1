@@ -4,6 +4,16 @@ import { HandSkeletonOverlay } from "./HandSkeletonOverlay";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { useLanguage } from "./context/LanguageContext";
+import {
+  FiCamera,
+  FiMic,
+  FiSquare,
+  FiTrash2,
+  FiVolume2,
+  FiPlus,
+  FiLogIn,
+  FiLogOut,
+} from "react-icons/fi";
 
 const API_BASE = (() => {
   const raw = import.meta.env.VITE_API_BASE_URL as string | undefined;
@@ -11,6 +21,11 @@ const API_BASE = (() => {
   // Default production backend (Render). Keeps working even if env var isn't set.
   return "https://ksl-be-ftj9.onrender.com/api";
 })();
+
+const FRAME_SEND_INTERVAL_MS = 180;
+const FRAME_WIDTH = 480;
+const FRAME_HEIGHT = 360;
+const FRAME_JPEG_QUALITY = 0.72;
 
 // Icons
 const IcCamera = () => (
@@ -33,28 +48,6 @@ const IcSun = () => (
     <circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
   </svg>
 );
-const IcStop = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="18" height="18" rx="2" />
-  </svg>
-);
-const IcVolume = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M11 5 6 9H2v6h4l5 4V5z" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-  </svg>
-);
-const IcTrash = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-  </svg>
-);
-const IcMic = ({ recording }: { recording?: boolean }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={recording ? "#ef4444" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
-    {recording && <circle cx="12" cy="12" r="11" stroke="#ef4444" strokeWidth="1" className="animate-ping" />}
-  </svg>
-);
-
 interface ApiStatus { active: boolean; status?: string; started_at?: string | null; backend?: string; error?: string; }
 interface Prediction {
   letter: string;
@@ -237,7 +230,7 @@ export default function InterpreterPage() {
   const [signPreviewNote, setSignPreviewNote] = useState("");
 
   const recognitionRef = useRef<any>(null);
-  const sessionIdRef = useRef<string>("");
+  const sessionIdRef = useRef<string>(sessionStorage.getItem("ksl_session_id") || "");
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -277,6 +270,9 @@ export default function InterpreterPage() {
   const streamRef = useRef<MediaStream | null>(null);
   const camRef = useRef(false);
   const translateSeqRef = useRef(0);
+  const frameInFlightRef = useRef(false);
+  const lastFrameSentAtRef = useRef(0);
+  const reconnectingRef = useRef(false);
 
   const apiFetch = useCallback(
     async (path: string, init?: RequestInit): Promise<Response> => {
@@ -292,6 +288,30 @@ export default function InterpreterPage() {
     const r = await apiFetch(path);
     if (!r.ok) throw new Error(`${r.status}`);
     return r.json() as Promise<T>;
+  }, [apiFetch]);
+
+  const startBackendSession = useCallback(async () => {
+    const r = await apiFetch(`/start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "letter" }),
+    });
+    if (!r.ok) {
+      let backendMsg = `Backend returned ${r.status}`;
+      try {
+        const err = (await r.json()) as { error?: string };
+        if (err?.error) backendMsg = err.error;
+      } catch {
+        // fallback message is enough
+      }
+      throw new Error(backendMsg);
+    }
+    const started = (await r.json().catch(() => ({}))) as { session_id?: string };
+    if (!started?.session_id) {
+      throw new Error("Backend did not return a session id.");
+    }
+    sessionIdRef.current = started.session_id;
+    sessionStorage.setItem("ksl_session_id", started.session_id);
   }, [apiFetch]);
 
   const refresh = useCallback(async () => {
@@ -355,15 +375,9 @@ export default function InterpreterPage() {
     let cancelled = false;
     void (async () => {
       try {
-        const r = await apiFetch(`/start`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mode: "letter" }),
-        });
-        if (!r.ok) return;
-        const started = (await r.json().catch(() => ({}))) as { session_id?: string };
-        if (started?.session_id) sessionIdRef.current = started.session_id;
+        await startBackendSession();
         if (!cancelled) {
+          reconnectingRef.current = false;
           setError("");
           void refresh();
         }
@@ -374,7 +388,7 @@ export default function InterpreterPage() {
     return () => {
       cancelled = true;
     };
-  }, [cameraActive, status.backend, status.status, refresh]);
+  }, [cameraActive, status.backend, status.status, refresh, startBackendSession]);
 
   useEffect(() => {
     if (activeTab !== "sign-to-text") return;
@@ -414,13 +428,25 @@ export default function InterpreterPage() {
     const vid = videoRef.current;
     const can = canvasRef.current;
     if (!vid || !can) return;
-    const id = setInterval(async () => {
+    let rafId = 0;
+    let disposed = false;
+
+    const tick = async () => {
+      if (disposed) return;
       if (vid.videoWidth === 0) return;
       if (!sessionIdRef.current) return; // Prevent sending frames before session is established
-      can.width = 640; can.height = 480;
+      if (document.visibilityState !== "visible") return;
+      if (frameInFlightRef.current) return;
+      const now = Date.now();
+      if (now - lastFrameSentAtRef.current < FRAME_SEND_INTERVAL_MS) return;
+
+      can.width = FRAME_WIDTH;
+      can.height = FRAME_HEIGHT;
       const ctx = can.getContext("2d"); if (!ctx) return;
+      frameInFlightRef.current = true;
+      lastFrameSentAtRef.current = now;
       ctx.drawImage(vid, 0, 0, can.width, can.height);
-      const image = can.toDataURL("image/jpeg", 0.9);
+      const image = can.toDataURL("image/jpeg", FRAME_JPEG_QUALITY);
       try {
         const r = await apiFetch(`/analyze-frame`, {
           method: "POST", headers: { "Content-Type": "application/json" },
@@ -460,7 +486,19 @@ export default function InterpreterPage() {
             if (isSessionMessage(backendMsg)) {
               setError("Reconnecting camera session...");
               sessionIdRef.current = "";
-              void refresh();
+              sessionStorage.removeItem("ksl_session_id");
+              if (!reconnectingRef.current) {
+                reconnectingRef.current = true;
+                void startBackendSession()
+                  .then(() => {
+                    setError("");
+                    reconnectingRef.current = false;
+                    void refresh();
+                  })
+                  .catch(() => {
+                    reconnectingRef.current = false;
+                  });
+              }
             }
           }
           return;
@@ -475,10 +513,24 @@ export default function InterpreterPage() {
           hold_progress: data.hold_progress || 0,
           hold_seconds_required: data.hold_seconds_required || 3,
         }));
-      } catch { }
-    }, 120);
-    return () => clearInterval(id);
-  }, [cameraActive]);
+      } catch {
+        // network hiccups are expected on hosted backends
+      } finally {
+        frameInFlightRef.current = false;
+      }
+    };
+
+    const loop = () => {
+      void tick();
+      if (!disposed) rafId = window.requestAnimationFrame(loop);
+    };
+    rafId = window.requestAnimationFrame(loop);
+    return () => {
+      disposed = true;
+      window.cancelAnimationFrame(rafId);
+      frameInFlightRef.current = false;
+    };
+  }, [cameraActive, apiFetch, refresh, startBackendSession]);
 
   const startInterpreter = async () => {
     setLoading(true); setError("");
@@ -490,27 +542,17 @@ export default function InterpreterPage() {
         videoRef.current.play().catch(() => { });
       }
       camRef.current = true; setCameraActive(true);
-      const startResponse = await fetch(`${API_BASE}/start`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "letter" }),
-      });
-      if (!startResponse.ok) {
-        let backendMsg = `Backend returned ${startResponse.status}`;
-        try {
-          const err = (await startResponse.json()) as { error?: string };
-          if (err?.error) backendMsg = err.error;
-        } catch {
-          // fallback is enough
-        }
-        if (startResponse.status === 503 && isLoadingMessage(backendMsg)) {
+      try {
+        await startBackendSession();
+      } catch (e) {
+        const backendMsg = e instanceof Error ? e.message : "Backend start failed";
+        if (backendMsg.includes("503") || isLoadingMessage(backendMsg)) {
           setError("Backend is still loading model. Camera is ready; detection will begin automatically.");
           setLoading(false);
           return;
         }
         throw new Error(backendMsg);
       }
-      const started = (await startResponse.json().catch(() => ({}))) as { session_id?: string };
-      if (started?.session_id) sessionIdRef.current = started.session_id;
       void refresh();
     } catch (e) {
       streamRef.current?.getTracks().forEach(t => t.stop());
@@ -531,6 +573,7 @@ export default function InterpreterPage() {
     try {
       await apiFetch(`/stop`, { method: "POST" });
       sessionIdRef.current = "";
+      sessionStorage.removeItem("ksl_session_id");
       streamRef.current?.getTracks().forEach(t => t.stop()); streamRef.current = null;
       if (videoRef.current) { videoRef.current.pause(); videoRef.current.srcObject = null; }
       camRef.current = false; setCameraActive(false);
@@ -584,11 +627,11 @@ export default function InterpreterPage() {
       <Header />
 
       {/* ═══════════════ MAIN ═══════════════ */}
-      <main className="flex-1 pt-28 md:pt-36 pb-20 container mx-auto px-6 flex flex-col items-center border-none">
+      <main className="flex-1 pt-20 md:pt-36 pb-12 container mx-auto px-4 md:px-6 flex flex-col items-center border-none">
 
         {/* Hero text */}
-        <div className="text-center max-w-3xl mx-auto mb-12 relative z-10 border-none">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-ksl-yellow text-slate-900 font-bold text-[13px] mb-8 tracking-tight border-none">
+        <div className="text-center max-w-3xl mx-auto mb-6 md:mb-12 relative z-10 border-none px-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-ksl-yellow text-slate-900 font-bold text-[10px] md:text-[13px] mb-4 md:mb-8 tracking-tight border-none shadow-sm shadow-ksl-yellow/20">
             {t.badge}
           </div>
           
@@ -599,32 +642,32 @@ export default function InterpreterPage() {
             {" "}{t.heroTitle2}
           </h1> */}
           
-          <p className="text-[18px] md:text-[20px] text-muted-foreground font-medium leading-relaxed max-w-xl mx-auto tracking-tight border-none">
+          <p className="text-[14px] md:text-[20px] text-muted-foreground font-medium leading-snug md:leading-relaxed max-w-xl mx-auto tracking-tight border-none px-4 opacity-90">
             {t.heroDesc}
           </p>
         </div>
 
         {/* ─── Tab switcher ─── */}
-        <div className="bg-white dark:bg-[#111] p-2 rounded-full flex gap-2 shadow-sm mb-12 z-10 relative border-none">
+        <div className="bg-white dark:bg-[#111] p-1 md:p-2 rounded-full flex gap-1 md:gap-2 shadow-sm mb-6 md:mb-12 z-10 relative border-none">
           <button
             onClick={() => setActiveTab("sign-to-text")}
-            className={`flex items-center gap-2.5 px-8 py-3.5 rounded-full text-[15px] font-bold transition-all duration-300 border-none ${
+            className={`flex items-center gap-1.5 md:gap-2 px-4 md:px-8 py-2 md:py-3.5 rounded-full text-[13px] md:text-[15px] font-bold transition-all duration-300 border-none ${
               activeTab === "sign-to-text"
                 ? "bg-ksl-dark text-white shadow-md"
                 : "text-muted-foreground hover:bg-slate-50 dark:hover:bg-[#222] hover:text-foreground"
             }`}
           >
-            <IcCamera /> {t.tabSignToText}
+            <IcCamera /> <span className="sm:inline">{t.tabSignToText}</span><span className="sm:hidden">Sign</span>
           </button>
           <button
             onClick={() => setActiveTab("text-to-sign")}
-            className={`flex items-center gap-2.5 px-8 py-3.5 rounded-full text-[15px] font-bold transition-all duration-300 border-none ${
+            className={`flex items-center gap-1.5 md:gap-2 px-4 md:px-8 py-2 md:py-3.5 rounded-full text-[13px] md:text-[15px] font-bold transition-all duration-300 border-none ${
               activeTab === "text-to-sign"
                 ? "bg-ksl-blue text-white shadow-md"
                 : "text-muted-foreground hover:bg-slate-50 dark:hover:bg-[#222] hover:text-foreground"
             }`}
           >
-            <IcType /> {t.tabTextToSign}
+            <IcType /> <span className="sm:inline">{t.tabTextToSign}</span><span className="sm:hidden">Text</span>
           </button>
         </div>
 
@@ -632,8 +675,8 @@ export default function InterpreterPage() {
         <div className="w-full max-w-[1100px] grid md:grid-cols-2 gap-[18px] border-none relative z-10">
 
           {/* LEFT card: Input */}
-          <div className="bg-white dark:bg-[#111] border-none rounded-[2rem] p-6 lg:p-10 flex flex-col gap-6 shadow-sm relative overflow-hidden transition-all">
-            <h3 className="font-bold text-[18px] tracking-tight border-none text-foreground">
+          <div className="bg-white dark:bg-[#111] border-none rounded-[1rem] md:rounded-[2rem] p-4 md:p-8 lg:p-10 flex flex-col gap-4 md:gap-6 shadow-sm relative overflow-hidden transition-all">
+            <h3 className="font-bold text-[16px] md:text-[18px] tracking-tight border-none text-foreground">
               {activeTab === "sign-to-text" ? t.leftCardCamera : t.leftCardText}
             </h3>
 
@@ -649,21 +692,22 @@ export default function InterpreterPage() {
                 <canvas ref={canvasRef} className="hidden" />
 
                 {!cameraActive && (
-                  <div className="relative z-10 flex flex-col items-center text-center px-6 gap-4 border-none">
-                    <div className="w-16 h-16 rounded-full bg-ksl-blue/10 flex items-center justify-center text-ksl-blue animate-float border-none">
-                      <IcCamera />
+                  <div className="relative z-10 flex flex-col items-center text-center px-4 gap-2 md:gap-4 border-none">
+                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-ksl-blue/10 flex items-center justify-center text-ksl-blue animate-float border-none">
+                      <IcCamera size={24} />
                     </div>
                     <div className="border-none">
-                      <p className="font-bold text-[16px] text-foreground mb-1 border-none tracking-tight">{t.cameraTitle}</p>
-                      <p className="text-[13px] text-muted-foreground leading-relaxed max-w-[200px] border-none">
+                      <p className="font-bold text-[15px] md:text-[16px] text-foreground mb-0.5 border-none tracking-tight">{t.cameraTitle}</p>
+                      <p className="text-[12px] md:text-[13px] text-muted-foreground leading-snug max-w-[180px] md:max-w-[200px] border-none">
                         {t.cameraDesc}
                       </p>
                     </div>
                     <button
                       onClick={startInterpreter}
                       disabled={loading}
-                      className="px-8 py-3.5 rounded-full bg-ksl-blue text-white text-[15px] font-bold shadow-md hover:bg-ksl-blue/90 active:scale-95 transition-all disabled:opacity-50 border-none"
+                      className="px-6 md:px-8 py-2.5 md:py-3.5 rounded-full bg-ksl-blue text-white text-[13px] md:text-[15px] font-bold shadow-md hover:bg-ksl-blue/90 active:scale-95 transition-all disabled:opacity-50 border-none flex items-center gap-2"
                     >
+                      <FiCamera className="text-sm md:text-base" />
                       {loading ? t.startingCamera : t.startCamera}
                     </button>
                   </div>
@@ -674,7 +718,7 @@ export default function InterpreterPage() {
                     onClick={stopInterpreter}
                     className="absolute bottom-4 right-4 z-20 p-3 bg-red-500 text-white rounded-[14px] shadow-xl hover:bg-red-600 active:scale-90 transition-all border-none"
                   >
-                    <IcStop />
+                    <FiSquare className="text-lg" />
                   </button>
                 )}
               </div>
@@ -685,7 +729,7 @@ export default function InterpreterPage() {
                   value={textInput}
                   onChange={e => setTextInput(e.target.value)}
                   placeholder={t.textPlaceholder}
-                  className="flex-1 min-h-[220px] bg-slate-50 dark:bg-[#0a0a0a] rounded-[1.5rem] p-6 text-foreground placeholder:text-muted-foreground text-[16px] font-medium resize-none focus:outline-none transition-colors border-none"
+                  className="flex-1 min-h-[180px] md:min-h-[220px] bg-slate-50 dark:bg-[#0a0a0a] rounded-[1.5rem] p-5 md:p-6 text-foreground placeholder:text-muted-foreground text-[15px] md:text-[16px] font-medium resize-none focus:outline-none transition-colors border-none"
                 />
                 
                 <div className="flex flex-col sm:flex-row gap-[12px] border-none">
@@ -698,7 +742,7 @@ export default function InterpreterPage() {
                         : "bg-slate-100 dark:bg-[#222] text-foreground hover:bg-slate-200 dark:hover:bg-[#333]"
                     }`}
                   >
-                    <IcMic recording={isRecording} />
+                    <FiMic className={`text-[18px] ${isRecording ? "text-white" : ""}`} />
                     {isRecording ? "Listening..." : t.recordBtn}
                   </button>
                   
@@ -717,14 +761,15 @@ export default function InterpreterPage() {
             {activeTab === "sign-to-text" && (
               <div className="flex items-center gap-4 mt-2 border-none">
                 <span className="text-[12px] font-bold text-muted-foreground uppercase tracking-widest border-none">{t.outputLangLabel}</span>
-                <div className="flex bg-slate-50 dark:bg-[#222] rounded-full p-1 gap-1 border-none">
-                  {[["rw", "Kinyarwanda"], ["en", "English"], ["fr", "French"]].map(([v, label]) => (
+                <div className="flex bg-slate-50 dark:bg-[#222] rounded-full p-1 gap-0.5 border-none overflow-x-auto no-scrollbar">
+                  {[["rw", "🇷🇼", "Kinyarwanda"], ["en", "🇺🇸", "English"], ["fr", "🇫🇷", "French"]].map(([v, flag, label]) => (
                     <button
                       key={v}
                       onClick={() => setOutputLang(v)}
-                      className={`px-4 py-1.5 rounded-full text-[13px] font-bold transition-all border-none ${outputLang === v ? "bg-ksl-blue text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                      className={`px-3 md:px-4 py-1 rounded-full text-[13px] font-bold transition-all border-none whitespace-nowrap flex items-center gap-1.5 ${outputLang === v ? "bg-ksl-blue text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                     >
-                      {label}
+                      <span>{flag}</span>
+                      <span className="hidden sm:inline">{label}</span>
                     </button>
                   ))}
                 </div>
@@ -733,9 +778,9 @@ export default function InterpreterPage() {
           </div>
 
           {/* RIGHT card: Output */}
-          <div className="bg-white dark:bg-[#111] border-none rounded-[2rem] p-6 lg:p-10 flex flex-col gap-6 shadow-sm border-none backdrop-blur-sm relative overflow-hidden">
+          <div className="bg-white dark:bg-[#111] border-none rounded-[1rem] md:rounded-[2rem] p-4 md:p-8 lg:p-10 flex flex-col gap-4 md:gap-6 shadow-sm border-none backdrop-blur-sm relative overflow-hidden">
             <div className="flex items-center justify-between border-none z-10 relative">
-              <h3 className="font-bold text-[18px] tracking-tight border-none text-foreground">{t.rightCard}</h3>
+              <h3 className="font-bold text-[16px] md:text-[18px] tracking-tight border-none text-foreground">{t.rightCard}</h3>
               {cameraActive && (
                 <div className="text-[13px] font-bold text-ksl-blue tabular-nums border-none bg-ksl-blue/10 px-4 py-1.5 rounded-full">
                   ⏱ {runDuration}
@@ -748,19 +793,23 @@ export default function InterpreterPage() {
                 {cameraActive ? (
                   <>
                     {/* Live detection display */}
-                    <div className="flex items-start gap-4 mb-4 border-none">
+                    <div className="flex items-start gap-3 md:gap-4 mb-4 border-none">
                       <div className="flex flex-col items-center border-none">
-                        <div className="w-16 h-16 rounded-[16px] bg-ksl-blue flex items-center justify-center border-none shadow-md shadow-ksl-blue/20">
-                          <span className="text-4xl font-black text-white">{prediction.letter || "—"}</span>
+                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-[16px] bg-ksl-blue flex items-center justify-center border-none shadow-md shadow-ksl-blue/20">
+                          <span className="text-3xl md:text-4xl font-black text-white">{prediction.letter || "—"}</span>
                         </div>
-                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2 border-none">Detection</span>
+                        <span className="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2 border-none">Detection</span>
                       </div>
                       <div className="flex flex-col gap-2 pt-1 border-none">
-                        <button onClick={commitLetter} className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-[13px] font-bold text-white transition-colors border-none">
-                          {t.addLetter}
+                        <button onClick={commitLetter} className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-[12px] md:text-[13px] font-bold text-white transition-colors border-none flex items-center gap-1.5">
+                          <FiPlus className="text-xs md:text-sm" />
+                          <span className="hidden sm:inline">{t.addLetter}</span>
+                          <span className="sm:hidden">Letter</span>
                         </button>
-                        <button onClick={commitSpace} className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-[13px] font-bold text-white transition-colors border-none">
-                          {t.addSpace}
+                        <button onClick={commitSpace} className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-[12px] md:text-[13px] font-bold text-white transition-colors border-none flex items-center gap-1.5">
+                          <FiPlus className="text-xs md:text-sm" />
+                          <span className="hidden sm:inline">{t.addSpace}</span>
+                          <span className="sm:hidden">Space</span>
                         </button>
                       </div>
                     </div>
@@ -780,10 +829,10 @@ export default function InterpreterPage() {
                       </div>
                     </div>
                     {/* Translation text */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar border-none mt-2">
-                      <p className="text-[26px] font-bold leading-tight text-white tracking-tight border-none">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar border-none mt-1 md:mt-2">
+                      <p className="text-[18px] md:text-[26px] font-bold leading-snug text-white tracking-tight border-none whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
                         {translatedText || prediction.text || <span className="text-gray-500 italic font-medium opacity-80">{t.waitingGestures}</span>}
-                        <span className="inline-block w-1.5 h-6 bg-ksl-blue ml-2 animate-pulse align-middle rounded-full border-none" />
+                        <span className="inline-block w-1 h-5 md:w-1.5 md:h-6 bg-ksl-blue ml-2 animate-pulse align-middle rounded-full border-none" />
                       </p>
                       {translateNote && (
                         <p className="mt-3 text-[13px] font-bold text-ksl-yellow/90 border-none">{translateNote}</p>
@@ -792,22 +841,22 @@ export default function InterpreterPage() {
                     {/* Footer actions */}
                     <div className="flex items-center justify-between mt-4 pt-5 border-t border-white/10">
                       <button onClick={clearText} className="flex items-center gap-2 text-[13px] font-bold text-gray-500 hover:text-red-400 transition-colors border-none">
-                        <IcTrash /> {t.clearAll}
+                        <FiTrash2 className="text-base" /> <span className="hidden sm:inline">{t.clearAll}</span><span className="sm:hidden">Clear</span>
                       </button>
                       <button onClick={speakResult} className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-ksl-blue text-[13px] font-bold text-white hover:bg-ksl-blue/90 transition-colors border-none shadow-sm shadow-ksl-blue/20">
-                        <IcVolume /> {t.speak}
+                        <FiVolume2 className="text-base" /> <span className="hidden sm:inline">{t.speak}</span><span className="sm:hidden">Speak</span>
                       </button>
                     </div>
                   </>
                 ) : (
                   /* Idle state */
-                  <div className="flex-1 flex flex-col items-center justify-center text-center gap-4 opacity-70 border-none">
-                    <div className="w-16 h-16 rounded-full bg-ksl-yellow flex items-center justify-center text-[#111] border-none shadow-sm">
-                      <IcSwap />
+                  <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 md:gap-4 opacity-70 border-none">
+                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-ksl-yellow flex items-center justify-center text-[#111] border-none shadow-sm">
+                      <IcSwap size={24} />
                     </div>
                     <div className="border-none">
-                      <p className="text-[16px] font-bold text-white mb-1 tracking-tight border-none">{t.translatedWords}</p>
-                      <p className="text-[13px] text-gray-400 max-w-[200px] mx-auto border-none leading-relaxed tracking-tight font-medium">{t.translatedWordsDesc}</p>
+                      <p className="text-[15px] md:text-[16px] font-bold text-white mb-0.5 tracking-tight border-none">{t.translatedWords}</p>
+                      <p className="text-[12px] md:text-[13px] text-gray-400 max-w-[180px] md:max-w-[200px] mx-auto border-none leading-snug tracking-tight font-medium">{t.translatedWordsDesc}</p>
                     </div>
                   </div>
                 )}
@@ -838,7 +887,10 @@ export default function InterpreterPage() {
                 onClick={() => setShowLogs(p => !p)}
                 className="text-[13px] font-bold text-slate-400 hover:text-slate-600 transition-colors border-none underline-offset-4 hover:underline"
               >
-                {showLogs ? t.hideLogs : t.showLogs}
+                <span className="inline-flex items-center gap-1.5">
+                  {showLogs ? <FiLogOut className="text-[14px]" /> : <FiLogIn className="text-[14px]" />}
+                  {showLogs ? t.hideLogs : t.showLogs}
+                </span>
               </button>
             </div>
           </div>

@@ -190,14 +190,14 @@ export function SignSequencePresenter({
           type="button"
           onClick={goPrev}
           disabled={index <= 0}
-          className="rounded-full border border-border bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
+          className="rounded-full border border-border bg-white px-3 md:px-4 py-1.5 md:py-2 text-[13px] md:text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
         >
           Previous
         </button>
         <button
           type="button"
           onClick={togglePlay}
-          className="rounded-full bg-emerald-500 px-7 py-2 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 active:scale-95 transition-all"
+          className="rounded-full bg-emerald-500 px-5 md:px-7 py-1.5 md:py-2 text-[13px] md:text-sm font-bold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 active:scale-95 transition-all"
         >
           {playing ? "Pause" : "Play"}
         </button>
@@ -205,14 +205,14 @@ export function SignSequencePresenter({
           type="button"
           onClick={goNext}
           disabled={index >= len - 1}
-          className="rounded-full border border-border bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
+          className="rounded-full border border-border bg-white px-3 md:px-4 py-1.5 md:py-2 text-[13px] md:text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
         >
           Next
         </button>
         <button
           type="button"
           onClick={restart}
-          className="rounded-full border border-border bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
+          className="rounded-full border border-border bg-white px-3 md:px-4 py-1.5 md:py-2 text-[13px] md:text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
         >
           Restart
         </button>

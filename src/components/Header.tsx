@@ -76,7 +76,7 @@ const Header = () => {
             <img 
               src={kslLogo} 
               alt="KSL Logo" 
-              className="h-9 md:h-11 w-auto transition-transform group-hover:scale-105" 
+              className="h-8 md:h-11 w-auto transition-transform group-hover:scale-105" 
             />
             <span className="font-display font-bold text-xl tracking-tight hidden sm:flex text-foreground">
               <span className="text-ksl-blue">K</span>

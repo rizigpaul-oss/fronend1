@@ -20,10 +20,10 @@ const Footer = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const languages: { code: Language; label: string }[] = [
-    { code: "english", label: "English" },
-    { code: "kinyarwanda", label: "Kinyarwanda" },
-    { code: "french", label: "Français" },
+  const languages: { code: Language; label: string; flag: string }[] = [
+    { code: "english", label: "English", flag: "🇺🇸" },
+    { code: "kinyarwanda", label: "Kinyarwanda", flag: "🇷🇼" },
+    { code: "french", label: "Français", flag: "🇫🇷" },
   ];
 
   const currentLangLabel = languages.find((l) => l.code === language)?.label || "Language";
@@ -57,8 +57,8 @@ const Footer = () => {
   };
 
   return (
-    <footer className="w-full bg-background border-t border-border py-6 px-4 mt-12 md:mt-20">
-      <div className="max-w-[1128px] mx-auto flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-[13px] font-display font-light text-muted-foreground tracking-normal">
+    <footer className="w-full bg-background border-t border-border py-6 px-4 mt-8 md:mt-20">
+      <div className="max-w-[1128px] mx-auto flex flex-wrap items-center justify-center gap-x-4 md:gap-x-5 gap-y-2 md:gap-y-3 text-[12px] md:text-[13px] font-display font-light text-muted-foreground tracking-normal">
         {/* Brand/Copyright Section */}
         <div className="flex items-center gap-2 mr-2">
           <Link to="/" className="flex items-center gap-1 group">
@@ -100,9 +100,10 @@ const Footer = () => {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowLangMenu(!showLangMenu)}
-            className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer font-light outline-none"
+            className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer font-light outline-none"
           >
-            <span>{currentLangLabel}</span>
+            <span>{languages.find(l => l.code === language)?.flag}</span>
+            <span className="hidden sm:inline">{currentLangLabel}</span>
             <ChevronDown size={14} strokeWidth={1.5} className={`mt-0.5 transition-transform duration-200 ${showLangMenu ? "rotate-180" : ""}`} />
           </button>
 
@@ -115,10 +116,11 @@ const Footer = () => {
                     setLanguage(lang.code);
                     setShowLangMenu(false);
                   }}
-                  className={`w-full text-left px-4 py-2 text-[12px] hover:bg-muted transition-colors ${
+                  className={`w-full text-left px-4 py-2 text-[12px] hover:bg-muted transition-colors flex items-center gap-2 ${
                     language === lang.code ? "bg-primary/10 text-primary font-light underline" : ""
                   }`}
                 >
+                  <span>{lang.flag}</span>
                   {lang.label}
                 </button>
               ))}
