@@ -29,23 +29,23 @@ const FRAME_HEIGHT = 360;
 const FRAME_JPEG_QUALITY = 0.72;
 
 // Icons
-const IcCamera = ({ size = 20 }: { size?: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IcCamera = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" />
   </svg>
 );
-const IcSwap = ({ size = 28 }: { size?: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IcSwap = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="m16 3 4 4-4 4" /><path d="M20 7H4" /><path d="m8 21-4-4 4-4" /><path d="M4 17h16" />
   </svg>
 );
-const IcType = ({ size = 18 }: { size?: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IcType = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="4 7 4 4 20 4 20 7" /><line x1="9" x2="15" y1="20" y2="20" /><line x1="12" x2="12" y1="4" y2="20" />
   </svg>
 );
-const IcSun = ({ size = 18 }: { size?: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IcSun = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
   </svg>
 );
@@ -758,7 +758,7 @@ export default function InterpreterPage() {
 
             {activeTab === "sign-to-text" ? (
               /* Camera view */
-              <div className="relative bg-slate-900 rounded-[2rem] overflow-hidden min-h-[340px] md:min-h-[400px] flex flex-col items-center justify-center border border-white/5 shadow-none shadow-black/20 group/video">
+              <div className="relative bg-slate-900 rounded-[2rem] overflow-hidden aspect-video flex flex-col items-center justify-center border border-white/5 shadow-none shadow-black/20 group/video">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 pointer-events-none opacity-0 group-hover/video:opacity-100 transition-opacity duration-500" />
                 <video
                   ref={videoRef}
@@ -769,25 +769,20 @@ export default function InterpreterPage() {
                 <canvas ref={canvasRef} className="hidden" />
 
                 {!cameraActive && (
-                  <div className="relative z-10 flex flex-col items-center text-center px-6 py-8 gap-6 md:gap-8 border-none">
-                    <div className="relative">
-                      <div className="absolute -inset-4 bg-ksl-blue/20 blur-2xl rounded-full animate-pulse-slow" />
-                      <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white animate-float shadow-none">
-                        <IcCamera size={32} />
-                      </div>
+                  <div className="relative z-10 flex flex-col items-center text-center px-4 gap-2 md:gap-4 border-none">
+                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-ksl-blue/10 flex items-center justify-center text-ksl-blue animate-float border-none">
+                      <IcCamera />
                     </div>
-                    <div className="border-none max-w-[280px]">
-                      <h4 className="font-bold text-[20px] md:text-[24px] text-white mb-2 border-none tracking-tight">{t.cameraTitle}</h4>
-                      <p className="text-[14px] md:text-[15px] text-white/60 leading-relaxed border-none">
-                        {t.cameraDesc}
-                      </p>
+                    <div className="border-none">
+                      <h4 className="font-bold text-[16px] md:text-[18px] mb-2 text-foreground border-none tracking-tight">{t.cameraTitle}</h4>
+                      <p className="text-[13px] md:text-[14px] text-muted-foreground mb-6 max-w-[240px] leading-relaxed border-none">{t.cameraDesc}</p>
                     </div>
                     <button
                       onClick={startInterpreter}
                       disabled={loading}
-                      className="px-10 md:px-12 py-3.5 md:py-4 rounded-full bg-ksl-blue text-white text-[15px] md:text-[16px] font-bold shadow-none hover:bg-ksl-blue/90 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 border-none flex items-center gap-3"
+                      className="px-6 md:px-8 py-2.5 md:py-3.5 rounded-full bg-ksl-blue text-white text-[13px] md:text-[15px] font-bold shadow-none hover:bg-ksl-blue/90 active:scale-95 transition-all disabled:opacity-50 border-none flex items-center gap-2"
                     >
-                      <FiCamera className="text-lg" />
+                      <FiCamera className="text-sm md:text-base" />
                       {loading ? t.startingCamera : t.startCamera}
                     </button>
                   </div>
