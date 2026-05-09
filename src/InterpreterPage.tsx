@@ -312,16 +312,21 @@ export default function InterpreterPage() {
       });
       const backendError = s.error || p.error || "";
       if (backendError) {
-        if (isSessionMessage(backendError) && !camRef.current) {
-          // No active camera/session yet; keep UI clean.
-          setError("");
+        if (isSessionMessage(backendError)) {
+          if (!camRef.current) {
+            // No active camera/session yet; keep UI clean.
+            setError("");
+          } else {
+            // Camera is active but session was lost or hasn't connected yet.
+            setError("Reconnecting camera session...");
+          }
           return;
         }
         setError(
           `Sign model unavailable on server: ${backendError} ` +
           `(Auth can still work; camera/sign detection needs a MediaPipe-compatible backend runtime.)`
         );
-      } else if (!camRef.current) {
+      } else {
         setError("");
       }
     } catch (e) {
@@ -411,6 +416,7 @@ export default function InterpreterPage() {
     if (!vid || !can) return;
     const id = setInterval(async () => {
       if (vid.videoWidth === 0) return;
+      if (!sessionIdRef.current) return; // Prevent sending frames before session is established
       can.width = 640; can.height = 480;
       const ctx = can.getContext("2d"); if (!ctx) return;
       ctx.drawImage(vid, 0, 0, can.width, can.height);
