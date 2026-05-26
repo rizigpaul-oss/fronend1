@@ -23,7 +23,14 @@ const API_BASE = (() => {
   return "https://ksl-be-ftj9.onrender.com/api";
 })();
 
-const FRAME_SEND_INTERVAL_MS = 180;
+const FRAME_SEND_INTERVAL_MS = 200;
+const DEFAULT_HOLD_SECONDS = 3;
+
+function parseHoldSeconds(value: unknown): number {
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_HOLD_SECONDS;
+}
+
 const FRAME_WIDTH = 480;
 const FRAME_HEIGHT = 360;
 const FRAME_JPEG_QUALITY = 0.72;
@@ -49,7 +56,14 @@ const IcSun = () => (
     <circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
   </svg>
 );
-interface ApiStatus { active: boolean; status?: string; started_at?: string | null; backend?: string; error?: string; }
+interface ApiStatus {
+  active: boolean;
+  status?: string;
+  started_at?: string | null;
+  backend?: string;
+  error?: string;
+  sign_detector?: string;
+}
 interface Prediction {
   letter: string;
   confidence: number;
@@ -70,6 +84,14 @@ interface AnalyzeFrameResponse {
   hold_seconds_required?: number;
   error?: string;
 }
+
+const defaultPrediction: Prediction = {
+  letter: "",
+  confidence: 0,
+  text: "",
+  hold_progress: 0,
+  hold_seconds_required: DEFAULT_HOLD_SECONDS,
+};
 
 const isLoadingMessage = (msg: string): boolean => {
   const lower = msg.toLowerCase();
@@ -217,7 +239,7 @@ export default function InterpreterPage() {
     text: "",
     current_letter: "",
     hold_progress: 0,
-    hold_seconds_required: 3,
+    hold_seconds_required: DEFAULT_HOLD_SECONDS,
   });
   const [cameraActive, setCameraActive] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -379,16 +401,23 @@ export default function InterpreterPage() {
       const [s, l, p] = await Promise.all([
         getJson<ApiStatus>("/status"),
         getJson<{ logs: string[] }>("/pipeline-logs"),
-        getJson<Prediction>("/prediction"),
+        sessionIdRef.current ? getJson<Prediction>("/prediction") : Promise.resolve(defaultPrediction),
       ]);
       setStatus(s);
       setLogs(l.logs);
-      setPrediction({
-        letter: p.current_letter || p.letter || "",
-        confidence: p.confidence || 0,
-        text: p.text || "",
-        hold_progress: p.hold_progress || 0,
-        hold_seconds_required: p.hold_seconds_required || 3,
+      setPrediction((prev) => {
+        const holdRequired = parseHoldSeconds(p.hold_seconds_required);
+        const fromCamera = camRef.current;
+        return {
+          letter: p.current_letter || p.letter || "",
+          confidence: p.confidence || 0,
+          text: p.text || "",
+          // While the camera loop is running, keep live hold progress from /analyze-frame.
+          hold_progress: fromCamera ? prev.hold_progress : (p.hold_progress ?? 0),
+          hold_seconds_required: fromCamera
+            ? prev.hold_seconds_required || holdRequired
+            : holdRequired,
+        };
       });
       const backendError = s.error || p.error || "";
       if (backendError) {
@@ -452,6 +481,11 @@ export default function InterpreterPage() {
 
   useEffect(() => {
     if (activeTab !== "sign-to-text") return;
+    if (status.backend !== "ready") {
+      setTranslatedText("");
+      setTranslateNote("");
+      return;
+    }
     const sourceText = (prediction.text || "").trim();
     if (!sourceText) {
       setTranslatedText("");
@@ -461,26 +495,43 @@ export default function InterpreterPage() {
 
     const seq = ++translateSeqRef.current;
     const id = window.setTimeout(async () => {
+      if (outputLang === "en") {
+        setTranslatedText(sourceText);
+        setTranslateNote("");
+        return;
+      }
       try {
-        const r = await fetch(`${API_BASE}/translate`, {
+        const r = await apiFetch("/translate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: sourceText, target: outputLang }),
         });
-        if (!r.ok) throw new Error(`${r.status}`);
         const data = (await r.json()) as TranslateResponse;
         if (seq !== translateSeqRef.current) return;
         setTranslatedText((data.text || sourceText).trim());
-        setTranslateNote(data.fallback ? (data.message || "") : "");
+        if (data.fallback && data.message) {
+          setTranslateNote(data.message);
+        } else if (!r.ok) {
+          setTranslatedText(sourceText);
+          setTranslateNote(
+            "Translation service error. Is the backend running at " +
+              API_BASE.replace(/\/api$/, "") +
+              " with internet access?"
+          );
+        } else {
+          setTranslateNote("");
+        }
       } catch {
         if (seq !== translateSeqRef.current) return;
         setTranslatedText(sourceText);
-        setTranslateNote(outputLang === "en" ? "" : "Translation unavailable; showing detected text.");
+        setTranslateNote(
+          "Cannot reach the translation API. Start the backend (.\\start_backend.ps1) and use http://127.0.0.1:5000."
+        );
       }
-    }, 250);
+    }, 500);
 
     return () => window.clearTimeout(id);
-  }, [activeTab, outputLang, prediction.text]);
+  }, [activeTab, outputLang, prediction.text, status.backend, apiFetch]);
 
   // Frame send loop
   useEffect(() => {
@@ -570,8 +621,9 @@ export default function InterpreterPage() {
           current_letter: data.current_letter || "",
           confidence: data.confidence || 0,
           text: data.text || "",
-          hold_progress: data.hold_progress || 0,
-          hold_seconds_required: data.hold_seconds_required || 3,
+          hold_progress:
+            typeof data.hold_progress === "number" ? data.hold_progress : 0,
+          hold_seconds_required: parseHoldSeconds(data.hold_seconds_required),
         }));
       } catch {
         // network hiccups are expected on hosted backends
@@ -590,7 +642,7 @@ export default function InterpreterPage() {
       window.cancelAnimationFrame(rafId);
       frameInFlightRef.current = false;
     };
-  }, [cameraActive, apiFetch, refresh, startBackendSession]);
+  }, [cameraActive, status.backend, apiFetch, refresh, startBackendSession]);
 
   const startInterpreter = async () => {
     setLoading(true); setError("");
@@ -910,16 +962,19 @@ export default function InterpreterPage() {
                     </div>
                     <div className="mb-4 border-none">
                       <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 border-none">
-                        <span>Auto confirm</span>
+                        <span>Auto confirm (hold sign)</span>
                         <span>
-                          {((prediction.hold_progress || 0) * (prediction.hold_seconds_required || 3)).toFixed(1)}
-                          s / {(prediction.hold_seconds_required || 3).toFixed(1)}s
+                          {(
+                            (prediction.hold_progress ?? 0) *
+                            parseHoldSeconds(prediction.hold_seconds_required)
+                          ).toFixed(1)}
+                          s / {parseHoldSeconds(prediction.hold_seconds_required).toFixed(1)}s
                         </span>
                       </div>
                       <div className="h-1.5 rounded-full bg-white/10 overflow-hidden border-none drop-shadow-none">
                         <div
                           className="h-full bg-ksl-yellow transition-all duration-100 border-none shadow-[0_0_8px_rgba(255,255,255,0.4)]"
-                          style={{ width: `${Math.max(0, Math.min((prediction.hold_progress || 0) * 100, 100))}%` }}
+                          style={{ width: `${Math.max(0, Math.min((prediction.hold_progress ?? 0) * 100, 100))}%` }}
                         />
                       </div>
                     </div>
