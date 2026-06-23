@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { PageShell } from "@/components/layout/PageShell";
 import { useLanguage } from "@/context/LanguageContext";
 
 const PrivacyPolicy = () => {
@@ -83,11 +84,11 @@ const PrivacyPolicy = () => {
   const currentContent = content[language];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
+    <PageShell className="bg-background text-foreground">
       <Header />
-      <main className="flex-1 container mx-auto px-4 py-24 max-w-4xl">
+      <main className="container mx-auto px-4 py-24 max-w-4xl">
         <div className="bg-card border border-border rounded-2xl p-8 md:p-12 shadow-sm">
-          <h1 className="text-3xl md:text-5xl font-display font-bold mb-4">
+          <h1 className="text-3xl md:text-5xl font-script mb-4">
             {currentContent.title}
           </h1>
           <p className="text-muted-foreground mb-8 border-b border-border pb-6">
@@ -95,12 +96,12 @@ const PrivacyPolicy = () => {
           </p>
 
           <div className="prose prose-slate dark:prose-invert max-w-none">
-            <p className="text-lg leading-relaxed mb-8">{currentContent.intro}</p>
+            <p className="text-lg font-display leading-relaxed mb-8">{currentContent.intro}</p>
 
             <div className="space-y-8">
               {currentContent.sections.map((section, index) => (
                 <section key={index}>
-                  <h2 className="text-2xl font-semibold mb-4 text-primary">
+                  <h2 className="text-2xl font-display font-bold mb-4 text-primary">
                     {section.heading}
                   </h2>
                   <p className="text-muted-foreground leading-relaxed">
@@ -113,7 +114,7 @@ const PrivacyPolicy = () => {
         </div>
       </main>
       <Footer />
-    </div>
+    </PageShell>
   );
 };
 

@@ -105,7 +105,7 @@ const Reports = () => {
       {/* Header Section */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-display font-bold text-white tracking-tight">
+          <h1 className="text-2xl font-display font-bold text-white tracking-tight">
             Analytics Overview
           </h1>
           <p className="text-sm text-blue-100/70 mt-1">
@@ -185,7 +185,7 @@ const Reports = () => {
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* Total Interpretations */}
-        <Card className="bg-[#111827] border border-white/5 rounded-xl shadow-lg opacity-100 hover:shadow-xl transition-all duration-300 overflow-hidden">
+        <Card className="bg-[#111827] border border-white/5 rounded-xl shadow-none opacity-100 hover:shadow-none transition-all duration-300 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-bold text-white">
               Total Interpretations
@@ -206,7 +206,7 @@ const Reports = () => {
         </Card>
 
         {/* Active Users */}
-        <Card className="bg-[#111827] border border-white/5 rounded-xl shadow-lg opacity-100 hover:shadow-xl transition-all duration-300 overflow-hidden">
+        <Card className="bg-[#111827] border border-white/5 rounded-xl shadow-none opacity-100 hover:shadow-none transition-all duration-300 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-bold text-white">
               Active Users
@@ -227,7 +227,7 @@ const Reports = () => {
         </Card>
 
         {/* Average Accuracy */}
-        <Card className="bg-[#111827] border border-white/5 rounded-xl shadow-lg opacity-100 hover:shadow-xl transition-all duration-300 overflow-hidden">
+        <Card className="bg-[#111827] border border-white/5 rounded-xl shadow-none opacity-100 hover:shadow-none transition-all duration-300 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-bold text-white">
               Average Accuracy
@@ -248,7 +248,7 @@ const Reports = () => {
         </Card>
 
         {/* Error Rate */}
-        <Card className="bg-[#111827] border border-white/5 rounded-xl shadow-lg opacity-100 hover:shadow-xl transition-all duration-300 overflow-hidden">
+        <Card className="bg-[#111827] border border-white/5 rounded-xl shadow-none opacity-100 hover:shadow-none transition-all duration-300 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-bold text-white">
               Error Rate
@@ -272,7 +272,7 @@ const Reports = () => {
       {/* Charts Section */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Interpretations Bar Chart */}
-        <Card className="lg:col-span-2 bg-[#111827] border border-white/5 rounded-xl shadow-lg opacity-100 overflow-hidden">
+        <Card className="lg:col-span-2 bg-[#111827] border border-white/5 rounded-xl shadow-none opacity-100 overflow-hidden">
           <CardHeader>
             <CardTitle className="text-base font-bold text-white">Activity Trend</CardTitle>
             <CardDescription className="text-[#D1D5DB]">Daily successful interpretations over time</CardDescription>
@@ -291,7 +291,7 @@ const Reports = () => {
         </Card>
 
         {/* Error Distribution Pie Chart */}
-        <Card className="bg-[#111827] border border-white/5 rounded-xl shadow-lg opacity-100 overflow-hidden">
+        <Card className="bg-[#111827] border border-white/5 rounded-xl shadow-none opacity-100 overflow-hidden">
           <CardHeader>
             <CardTitle className="text-base font-bold text-white">Error Distribution</CardTitle>
             <CardDescription className="text-[#D1D5DB]">Breakdown of recognition errors</CardDescription>
@@ -335,7 +335,7 @@ const Reports = () => {
         </Card>
 
         {/* Accuracy Trend Line Chart */}
-        <Card className="lg:col-span-3 bg-[#111827] border border-white/5 rounded-xl shadow-lg opacity-100 overflow-hidden">
+        <Card className="lg:col-span-3 bg-[#111827] border border-white/5 rounded-xl shadow-none opacity-100 overflow-hidden">
           <CardHeader>
             <CardTitle className="text-base font-bold text-white">Accuracy Performance</CardTitle>
             <CardDescription className="text-[#D1D5DB]">Model recognition accuracy percentage</CardDescription>
@@ -365,7 +365,7 @@ const Reports = () => {
       {/* Activity Section */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Recent Interpretations */}
-        <Card className="bg-[#111827] border border-white/5 rounded-xl shadow-lg opacity-100 overflow-hidden">
+        <Card className="bg-[#111827] border border-white/5 rounded-xl shadow-none opacity-100 overflow-hidden">
           <CardHeader className="bg-white/5 border-b border-white/5 pb-4">
             <CardTitle className="text-base font-bold text-white flex items-center justify-between">
               Recent Interpretations
@@ -393,7 +393,7 @@ const Reports = () => {
         </Card>
 
         {/* Recent Users – live from MongoDB */}
-        <Card className="bg-[#111827] border border-white/5 rounded-xl shadow-lg opacity-100 overflow-hidden">
+        <Card className="bg-[#111827] border border-white/5 rounded-xl shadow-none opacity-100 overflow-hidden">
           <CardHeader className="bg-white/5 border-b border-white/5 pb-4">
             <CardTitle className="text-base font-bold text-white flex items-center justify-between">
               User Activity

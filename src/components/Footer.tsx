@@ -1,146 +1,172 @@
-import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Facebook, Twitter, Instagram, Youtube, Mail } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import kslLogo from "@/assets/ksl-logo.png";
-import { useLanguage, type Language } from "@/context/LanguageContext";
+import { X } from "lucide-react";
+import { toast } from "sonner";
+import { submitFeedback } from "@/lib/api";
 
 const Footer = () => {
-  const { language, setLanguage } = useLanguage();
-  const [showLangMenu, setShowLangMenu] = useState(false);
   const currentYear = new Date().getFullYear();
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [activePopup, setActivePopup] = useState<"issue" | "feedback" | null>(null);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowLangMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const languages: { code: Language; label: string; flag: string }[] = [
-    { code: "english", label: "English", flag: "🇺🇸" },
-    { code: "kinyarwanda", label: "Kinyarwanda", flag: "🇷🇼" },
-    { code: "french", label: "Français", flag: "🇫🇷" },
-  ];
-
-  const currentLangLabel = languages.find((l) => l.code === language)?.label || "Language";
-
-  // Consolidating current content into the LinkedIn-style link list
-  const links = [
-    { key: "about", to: "/about", labels: { english: "About", kinyarwanda: "Ibyerekeye", french: "À propos" } },
-    { key: "accessibility", to: "/user-guide", labels: { english: "Accessibility", kinyarwanda: "Uburyo bworoheye", french: "Accessibilité" } },
-    { key: "userAgreement", to: "/terms-of-service", labels: { english: "User Agreement", kinyarwanda: "Amasezerano", french: "Contrat d'utilisation" } },
-    { key: "privacy", to: "/privacy-policy", labels: { english: "Privacy Policy", kinyarwanda: "Politiki y'Ibanga", french: "Confidentialité" } },
-    { key: "cookies", to: "/privacy-policy", labels: { english: "Cookie Policy", kinyarwanda: "Kuki", french: "Cookies" } },
-    { key: "copyright", to: "/terms-of-service", labels: { english: "Copyright Policy", kinyarwanda: "Uburenganzira bwa kope", french: "Droit d'auteur" } },
-    { key: "brand", to: "/about", labels: { english: "Brand Policy", kinyarwanda: "Ikirango", french: "Politique de marque" } },
-    { key: "guidelines", to: "/community-forum", labels: { english: "Community Guidelines", kinyarwanda: "Amategeko y'umuryango", french: "Directives" } },
-    { key: "home", to: "/", labels: { english: "Home", kinyarwanda: "Ahabanza", french: "Accueil" } },
-    { key: "features", to: "/features", labels: { english: "Features", kinyarwanda: "Ibiranga", french: "Fonctionnalités" } },
-    { key: "demo", to: "/translate", labels: { english: "Demo", kinyarwanda: "Igerageza", french: "Démo" } },
-  ];
-
-  const socialLinks = [
-    { icon: Facebook, href: "https://www.facebook.com" },
-    { icon: Twitter, href: "https://www.twitter.com" },
-    { icon: Instagram, href: "https://www.instagram.com" },
-    { icon: Youtube, href: "https://www.youtube.com" },
-  ];
-
-  const taglines = {
-    english: "AI-powered Kinyarwanda Sign Language interpreter bridging communication between deaf and hearing communities.",
-    kinyarwanda: "Umusemuzi ukoresha ubwenge bw'ikoranabuhanga uhuza abafite ubumuga bwo kutumva no kutavuga ndetse nabavuga bakanumva.",
-    french: "Interprète en langue des signes kinyarwanda, propulsé par l'IA, reliant les communautés sourdes et entendantes."
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !email.trim() || !message.trim()) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await submitFeedback({
+        name,
+        email,
+        topic: activePopup === "issue" ? "issue" : "feedback",
+        message,
+      });
+      toast.success(
+        activePopup === "issue"
+          ? "Thank you! The issue has been reported to the admin."
+          : "Thank you! Your feedback has been submitted successfully."
+      );
+      setName("");
+      setEmail("");
+      setMessage("");
+      setActivePopup(null);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to submit feedback. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <footer className="w-full bg-background border-t border-white/5 py-10 px-6 mt-16 md:mt-24 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-ksl-blue/[0.02] pointer-events-none" />
-      <div className="max-w-[1280px] mx-auto relative z-10">
-        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4 text-[13px] font-medium text-muted-foreground/70 tracking-tight">
-        {/* Brand/Copyright Section */}
-        <div className="flex items-center gap-2 mr-2">
-          <Link to="/" className="flex items-center gap-1 group">
-            <img 
-              src={kslLogo} 
-              alt="KSL Logo" 
-              className="h-4 w-auto grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all" 
-            />
-            <span className="font-light text-foreground text-[14px]">
-              <span className="text-ksl-blue">K</span>
-              <span className="text-ksl-yellow">S</span>
-              <span className="text-ksl-dark dark:text-white">L</span>
-            </span>
-          </Link>
-          <span className="text-[12px]">© {currentYear}</span>
-        </div>
+    <>
+      <footer className="w-full font-display bg-slate-50 border-t border-border mt-auto py-6">
+        <div className="max-w-[1280px] mx-auto px-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[14px] text-muted-foreground">
+          
+          <div className="flex items-center gap-2">
+            <span className="font-display font-bold text-foreground">KSL</span>
+            <span>© {currentYear}</span>
+          </div>
 
-        {/* Links Section */}
-        {links.map((link) => (
-          <Link
-            key={link.key}
-            to={link.to}
-            className="hover:text-primary hover:underline transition-colors whitespace-nowrap"
-          >
-            {link.labels[language]}
-          </Link>
-        ))}
-
-        {/* Social - Minimal Icons */}
-        <div className="flex items-center gap-3 ml-1 pr-3 border-r border-border h-3 hidden sm:flex">
-          {socialLinks.map((social, i) => (
-            <a key={i} href={social.href} className="hover:text-primary transition-colors">
-              <social.icon size={14} strokeWidth={1.5} />
-            </a>
-          ))}
-        </div>
-
-        {/* Language Selection */}
-        <div className="relative" ref={menuRef}>
+          <Link to="/about" className="font-display hover:text-foreground transition-colors">About</Link>
+          <Link to="/privacy-policy" className="font-display hover:text-foreground transition-colors">Privacy Policy</Link>
+          <Link to="/community-forum" className="font-display hover:text-foreground transition-colors">Community Guidelines</Link>
+          
+          {/* Button triggers instead of separate page links */}
           <button
-            onClick={() => setShowLangMenu(!showLangMenu)}
-            className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer font-light outline-none"
+            onClick={() => setActivePopup("issue")}
+            className="font-display hover:text-foreground transition-colors focus:outline-none"
           >
-            <span>{languages.find(l => l.code === language)?.flag}</span>
-            <span className="hidden sm:inline">{currentLangLabel}</span>
-            <ChevronDown size={14} strokeWidth={1.5} className={`mt-0.5 transition-transform duration-200 ${showLangMenu ? "rotate-180" : ""}`} />
+            Report Issue
           </button>
-
-          {showLangMenu && (
-            <div className="absolute bottom-full right-0 mb-2 w-36 bg-card border border-border rounded-md shadow-xl overflow-hidden z-50 animate-fade-in">
-              {languages.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => {
-                    setLanguage(lang.code);
-                    setShowLangMenu(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 text-[12px] hover:bg-muted transition-colors flex items-center gap-2 ${
-                    language === lang.code ? "bg-primary/10 text-primary font-light underline" : ""
-                  }`}
-                >
-                  <span>{lang.flag}</span>
-                  {lang.label}
-                </button>
-              ))}
-            </div>
-          )}
+          <button
+            onClick={() => setActivePopup("feedback")}
+            className="font-display hover:text-foreground transition-colors focus:outline-none"
+          >
+            Submit Feedback
+          </button>
+          
         </div>
-      </div>
+      </footer>
 
-      {/* Subtle Tagline - Bottom Bar */}
-      <div className="max-w-[1128px] mx-auto mt-6 pt-4 border-t border-border/30">
-        <p className="text-[10px] text-center text-muted-foreground/50 font-display font-light">
-          {taglines[language]}
-        </p>
-      </div>
-      </div>
-    </footer>
+      {/* Modal Popup */}
+      {activePopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0B252E]/60 backdrop-blur-sm p-4 animate-reveal">
+          <div
+            className="absolute inset-0 cursor-pointer"
+            onClick={() => {
+              if (!submitting) setActivePopup(null);
+            }}
+          />
+          <div className="relative w-full max-w-lg bg-[#F6F4EF] border border-[#0B252E]/10 p-6 md:p-8 rounded-[24px] shadow-card text-[#0B252E] z-10">
+            
+            {/* Close Button */}
+            <button
+              onClick={() => setActivePopup(null)}
+              disabled={submitting}
+              className="absolute top-4 right-4 p-1 text-[#0B252E]/60 hover:text-[#0B252E] hover:bg-[#0B252E]/5 rounded-full transition-colors focus:outline-none"
+              aria-label="Close form"
+            >
+              <X size={20} />
+            </button>
+
+            <h3 className="text-2xl font-display font-bold tracking-tight mb-2 lowercase leading-none">
+              {activePopup === "issue" ? "report translation issue" : "submit feedback"}
+              <span className="text-[#90DDF5]">.</span>
+            </h3>
+            <p className="text-[13px] text-slate-500 mb-5 leading-relaxed">
+              {activePopup === "issue"
+                ? "Help us improve KSL recognition. Describe what went wrong below."
+                : "Tell us about your experience with KSL interpreter. We value your thoughts."}
+            </p>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="John Doe"
+                  disabled={submitting}
+                  className="w-full bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-[13px] text-[#0B252E] outline-none focus:border-[#90DDF5] transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="john@example.com"
+                  disabled={submitting}
+                  className="w-full bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-[13px] text-[#0B252E] outline-none focus:border-[#90DDF5] transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                  Message Details
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder={
+                    activePopup === "issue"
+                      ? "Explain what signs were misrecognized or any translation issues..."
+                      : "Write your feedback or suggestions here..."
+                  }
+                  disabled={submitting}
+                  className="w-full bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-[13px] text-[#0B252E] outline-none focus:border-[#90DDF5] transition-all resize-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-[#90DDF5] hover:bg-[#74cfeb] text-[#0B252E] font-bold py-3.5 rounded-full uppercase tracking-wider transition-all duration-200 shadow-sm border-none mt-2 disabled:opacity-50"
+              >
+                {submitting ? "Submitting..." : "Submit"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
 export default Footer;
-

@@ -18,6 +18,15 @@ import {
 } from "@/utils/gestureRecognition";
 import { speakText, stopSpeaking, detectLanguage } from "@/utils/textToSpeech";
 import { translateTextToSign, type SignAnimation } from "@/utils/textToSign";
+import { PlainTextEditor } from "@/components/PlainTextEditor";
+import { RecentTextSuggestions } from "@/components/RecentTextSuggestions";
+import {
+  applySuggestionToText,
+  getLocalTextSuggestions,
+  lastWordPrefix,
+  recordLocalTextUsage,
+  type TextSuggestion,
+} from "@/utils/textSuggestions";
 
 const DemoSection = () => {
   const [activeTab, setActiveTab] = useState<"gesture" | "text">("gesture");
@@ -32,6 +41,7 @@ const DemoSection = () => {
   const [isModelLoading, setIsModelLoading] = useState(true);
   const [recognitionAccuracy, setRecognitionAccuracy] = useState(96);
   const [isAutoSpeak, setIsAutoSpeak] = useState(true);
+  const [textSuggestions, setTextSuggestions] = useState<TextSuggestion[]>([]);
 
   // Sync auto-speak setting with gesture recognition
   useEffect(() => {
@@ -182,7 +192,16 @@ const DemoSection = () => {
   const handleClearInput = () => {
     setTextInput("");
     clearTranscript();
+    setTextSuggestions([]);
   };
+
+  useEffect(() => {
+    if (activeTab !== "text") {
+      setTextSuggestions([]);
+      return;
+    }
+    setTextSuggestions(getLocalTextSuggestions(lastWordPrefix(textInput), 6));
+  }, [textInput, activeTab]);
 
   // Handle text input and translate to sign language
   const handleTextInput = async (text: string) => {
@@ -201,7 +220,9 @@ const DemoSection = () => {
       
       // Display animations one by one
       setSignAnimations(animations);
-      
+      recordLocalTextUsage(text);
+      setTextSuggestions(getLocalTextSuggestions(lastWordPrefix(text), 6));
+
       // Auto-detect language and speak
       speakText(text, detectedLang as "kinyarwanda" | "english");
       
@@ -281,7 +302,7 @@ const DemoSection = () => {
 
         {/* Demo Interface */}
         <div className="max-w-5xl mx-auto">
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center  mb-8">
             <div className="grid grid-cols-2 p-1 bg-card border border-border rounded-xl w-full sm:w-auto overflow-hidden">
               <button
                 onClick={() => setActiveTab("gesture")}
@@ -321,11 +342,11 @@ const DemoSection = () => {
           </div>
 
           {/* Demo Card */}
-          <div className="bg-card rounded-3xl border border-border shadow-card overflow-hidden">
+          <div className="bg-card  rounded-3xl border border-border shadow-card overflow-hidden">
             <div className="flex flex-col md:grid md:grid-cols-2">
-              <div className="p-6 md:p-8 border-b md:border-b-0 md:border-r border-border">
+              <div className="p- md:p-12 border-b md:border-b-0 md:border-r border-border">
                 {activeTab === "gesture" ? (
-                  <div className={`bg-muted rounded-2xl overflow-hidden border-2 border-border relative ${isActive ? 'aspect-video' : 'min-h-[280px] sm:min-h-0 sm:aspect-video'}`}>
+                  <div className={`bg-muted rounded-2xl overflow-hidden border-2 border-border  relative ${isActive ? 'aspect-video' : 'min-h-[280px] sm:min-h-0 sm:aspect-video'}`}>
                     <video
                       ref={videoRef}
                       autoPlay
@@ -369,7 +390,7 @@ const DemoSection = () => {
                         </button>
                       </>
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center">
+                      <div className="w-full  h-full flex flex-col items-center justify-center">
                         <div className="w-20 h-20 rounded-full gradient-hero flex items-center justify-center mb-4">
                           <Camera size={40} className="text-primary-foreground" />
                         </div>
@@ -403,34 +424,49 @@ const DemoSection = () => {
                 ) : (
                   <div className="space-y-4">
                     {/* Text Input Area */}
-                    <div className="relative">
-                      <textarea
-                        value={textInput}
-                        onChange={(e) => setTextInput(e.target.value)}
-                        placeholder={
-                          language === "kinyarwanda"
-                            ? "Andika ubutumwa bwawe mu Kinyarwanda cyangwa mu Cyongereza..."
-                            : language === "french"
-                            ? "Saisissez votre message en kinyarwanda ou en anglais..."
-                            : "Type your message in Kinyarwanda or English..."
-                        }
-                        className="w-full h-40 p-4 rounded-2xl bg-muted border-2 border-border focus:border-secondary focus:outline-none resize-none text-foreground placeholder:text-muted-foreground pr-12"
-                      />
-                      {textInput && (
-                        <button
-                          onClick={handleClearInput}
-                          className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-muted-foreground/10 transition-colors"
-                          title={
+                    <div className="flex flex-col gap-3">
+                      <div className="relative">
+                        <PlainTextEditor
+                          value={textInput}
+                          onChange={setTextInput}
+                          placeholder={
                             language === "kinyarwanda"
-                              ? "Siba"
+                              ? "Andika ubutumwa bwawe mu Kinyarwanda cyangwa mu Cyongereza..."
                               : language === "french"
-                              ? "Effacer"
-                              : "Clear"
+                              ? "Saisissez votre message en kinyarwanda ou en anglais..."
+                              : "Type your message in Kinyarwanda or English..."
                           }
-                        >
-                          <Trash2 size={16} className="text-muted-foreground" />
-                        </button>
-                      )}
+                          className="w-full min-h-[10rem] p-4 pr-12 rounded-2xl bg-muted border-2 border-border focus:border-secondary text-foreground"
+                        />
+                        {textInput && (
+                          <button
+                            onClick={handleClearInput}
+                            className="absolute top-3 right-3 p-1.5 rounded-lg hover:bg-muted-foreground/10 transition-colors"
+                            title={
+                              language === "kinyarwanda"
+                                ? "Siba"
+                                : language === "french"
+                                ? "Effacer"
+                                : "Clear"
+                            }
+                          >
+                            <Trash2 size={16} className="text-muted-foreground" />
+                          </button>
+                        )}
+                      </div>
+                      <RecentTextSuggestions
+                        items={textSuggestions}
+                        onSelect={(s) =>
+                          setTextInput((prev) => applySuggestionToText(prev, s))
+                        }
+                        label={
+                          language === "kinyarwanda"
+                            ? "Ibyo wahinduye mbere — kanda ukabisabe"
+                            : language === "french"
+                            ? "Vos traductions récentes — touchez pour utiliser"
+                            : "Your recent translations — tap to use (optional)"
+                        }
+                      />
                     </div>
                     
                     {/* Voice Input Language Selection */}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
+import { PageShell } from "@/components/layout/PageShell";
 import { ArrowLeft, Settings as SettingsIcon } from "lucide-react";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ const Settings = () => {
   if (hasUser === undefined) return null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <PageShell className="bg-background">
       <Header />
       <main className="container mx-auto px-4 pt-24 pb-16">
         <div className="max-w-2xl mx-auto">
@@ -72,7 +73,7 @@ const Settings = () => {
           </Card>
         </div>
       </main>
-    </div>
+    </PageShell>
   );
 };
 

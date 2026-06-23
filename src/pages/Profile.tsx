@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, Navigate } from "react-router-dom";
+import { PageShell } from "@/components/layout/PageShell";
 import { ArrowLeft, User, Mail, Camera, Edit2, Save, X } from "lucide-react";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -124,7 +125,7 @@ const Profile = () => {
   const currentProfilePicture = previewImage || editForm.profilePicture || "";
 
   return (
-    <div className="min-h-screen bg-background">
+    <PageShell className="bg-background">
       <Header />
       <main className="container mx-auto px-4 pt-24 pb-16">
         <div className="max-w-2xl mx-auto">
@@ -313,7 +314,7 @@ const Profile = () => {
           </Card>
         </div>
       </main>
-    </div>
+    </PageShell>
   );
 };
 

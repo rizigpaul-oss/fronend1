@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/context/LanguageContext";
+import { PageShell } from "@/components/layout/PageShell";
 
 const CommunityForum = () => {
   const { language } = useLanguage();
@@ -28,7 +29,7 @@ const CommunityForum = () => {
   } as const;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <PageShell className="bg-background text-foreground">
       <div className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-5xl mx-auto">
           <div className="mb-6 flex justify-center md:justify-start">
@@ -56,10 +57,10 @@ const CommunityForum = () => {
             <p className="inline-flex items-center rounded-full bg-primary/10 px-4 py-1 text-xs font-medium text-primary">
               {content.badge[language]}
             </p>
-            <h1 className="mt-4 font-display text-3xl md:text-4xl font-bold">
+            <h1 className="mt-4 font-script text-3xl md:text-4xl">
               {content.title[language]}
             </h1>
-            <p className="mt-3 text-sm md:text-base text-muted-foreground">
+            <p className="mt-3 text-sm md:text-base font-display text-muted-foreground">
               {content.description[language]}
             </p>
           </header>
@@ -88,7 +89,7 @@ const CommunityForum = () => {
           </section>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

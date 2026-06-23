@@ -1,16 +1,17 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FeaturesSection from "@/components/FeaturesSection";
+import { PageShell } from "@/components/layout/PageShell";
 
 const Features = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <PageShell className="bg-background">
       <Header />
       <main className="pt-20">
         <FeaturesSection />
       </main>
       <Footer />
-    </div>
+    </PageShell>
   );
 };
 

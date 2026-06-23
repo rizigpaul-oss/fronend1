@@ -183,7 +183,7 @@ const InterpretationLogs = () => {
       {/* Header */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between text-white">
         <div>
-          <h1 className="text-2xl md:text-3xl font-display font-bold text-white tracking-tight">
+          <h1 className="text-xl md:text-2xl font-display font-bold text-white tracking-tight">
             Interpretation Logs
           </h1>
           <p className="text-sm text-blue-200/70 mt-1">
@@ -213,7 +213,7 @@ const InterpretationLogs = () => {
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-[#0f172a] border border-white/10 rounded-xl shadow-lg hover:shadow-xl transition-all overflow-hidden text-white">
+        <Card className="bg-[#0f172a] border border-white/10 rounded-xl shadow-none transition-all overflow-hidden text-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-bold text-white">Total Requests</CardTitle>
             <div className="p-2 rounded-full bg-blue-500/20 text-blue-400">
@@ -221,11 +221,11 @@ const InterpretationLogs = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{totalRequests}</div>
+            <div className="text-2xl font-bold">{totalRequests}</div>
             <p className="text-xs text-blue-200/60 mt-2">Overall recorded logs</p>
           </CardContent>
         </Card>
-        <Card className="bg-[#0f172a] border border-white/10 rounded-xl shadow-lg hover:shadow-xl transition-all overflow-hidden text-white">
+        <Card className="bg-[#0f172a] border border-white/10 rounded-xl shadow-none transition-all overflow-hidden text-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-bold text-white">Completed</CardTitle>
             <div className="p-2 rounded-full bg-emerald-500/20 text-emerald-400">
@@ -233,11 +233,11 @@ const InterpretationLogs = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-emerald-400">{completedRequests}</div>
+            <div className="text-2xl font-bold text-emerald-400">{completedRequests}</div>
             <p className="text-xs text-blue-200/60 mt-2">Successfully interpreted</p>
           </CardContent>
         </Card>
-        <Card className="bg-[#0f172a] border border-white/10 rounded-xl shadow-lg hover:shadow-xl transition-all overflow-hidden text-white">
+        <Card className="bg-[#0f172a] border border-white/10 rounded-xl shadow-none transition-all overflow-hidden text-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-bold text-white">Pending</CardTitle>
             <div className="p-2 rounded-full bg-amber-500/20 text-amber-400">
@@ -245,11 +245,11 @@ const InterpretationLogs = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-amber-400">{pendingRequests}</div>
+            <div className="text-2xl font-bold text-amber-400">{pendingRequests}</div>
             <p className="text-xs text-blue-200/60 mt-2">Awaiting completion</p>
           </CardContent>
         </Card>
-        <Card className="bg-[#0f172a] border border-white/10 rounded-xl shadow-lg hover:shadow-xl transition-all overflow-hidden text-white">
+        <Card className="bg-[#0f172a] border border-white/10 rounded-xl shadow-none transition-all overflow-hidden text-white">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-bold text-white">Failed</CardTitle>
             <div className="p-2 rounded-full bg-rose-500/20 text-rose-400">
@@ -257,14 +257,14 @@ const InterpretationLogs = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-rose-400">{failedRequests}</div>
+            <div className="text-2xl font-bold text-rose-400">{failedRequests}</div>
             <p className="text-xs text-blue-200/60 mt-2">Errors or timeouts</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Table Card */}
-      <Card className="border border-white/10 bg-[#0f172a] shadow-xl rounded-xl overflow-hidden text-white">
+      <Card className="border border-white/10 bg-[#0f172a] shadow-none rounded-xl overflow-hidden text-white">
         <CardContent className="p-0">
           
           {/* Filters Bar */}
@@ -460,7 +460,7 @@ const InterpretationLogs = () => {
 
       {/* Activity Insights */}
       <div className="grid gap-6 md:grid-cols-3">
-        <Card className="md:col-span-2 bg-[#0f172a] border border-white/10 rounded-xl shadow-lg overflow-hidden text-white">
+        <Card className="md:col-span-2 bg-[#0f172a] border border-white/10 rounded-xl shadow-none overflow-hidden text-white">
           <CardHeader>
             <CardTitle className="text-lg font-bold flex items-center gap-2 text-white">
               <BarChart3 className="w-5 h-5 text-blue-500" />
@@ -487,7 +487,7 @@ const InterpretationLogs = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-[#0f172a] border border-white/10 rounded-xl shadow-lg overflow-hidden text-white">
+        <Card className="bg-[#0f172a] border border-white/10 rounded-xl shadow-none overflow-hidden text-white">
           <CardHeader>
             <CardTitle className="text-lg font-bold flex items-center gap-2 text-white">
               <Users className="w-5 h-5 text-blue-500" />

@@ -3,17 +3,26 @@ import { SignSequencePresenter, type SignPreviewItem } from "./SignSequencePrese
 import { HandSkeletonOverlay } from "./HandSkeletonOverlay";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import { useLanguage } from "./context/LanguageContext";
+import { PageShell } from "./components/layout/PageShell";
+import { stripDisplayMarkup } from "./utils/plainText";
+import { PlainTextEditor } from "./components/PlainTextEditor";
+import { RecentTextSuggestions } from "./components/RecentTextSuggestions";
+import { TranslationSuggestionBar } from "./components/TranslationSuggestionBar";
+import {
+  applySuggestionToText,
+  getDeviceId,
+  getLocalTextSuggestions,
+  lastWordPrefix,
+  mergeSuggestions,
+  recordLocalTextUsage,
+  type TextSuggestion,
+} from "./utils/textSuggestions";
 import {
   FiCamera,
-  FiMic,
   FiSquare,
   FiTrash2,
-  FiVolume2,
   FiPlus,
   FiRotateCcw,
-  FiLogIn,
-  FiLogOut,
 } from "react-icons/fi";
 
 const API_BASE = (() => {
@@ -36,18 +45,18 @@ const FRAME_HEIGHT = 360;
 const FRAME_JPEG_QUALITY = 0.72;
 
 // Icons
-const IcCamera = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IcCamera = ({ size = 20 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" />
   </svg>
 );
-const IcSwap = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IcSwap = ({ size = 28 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="m16 3 4 4-4 4" /><path d="M20 7H4" /><path d="m8 21-4-4 4-4" /><path d="M4 17h16" />
   </svg>
 );
-const IcType = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IcType = ({ size = 18 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="4 7 4 4 20 4 20 7" /><line x1="9" x2="15" y1="20" y2="20" /><line x1="12" x2="12" y1="4" y2="20" />
   </svg>
 );
@@ -120,117 +129,47 @@ async function getUserMediaWithFallbacks(): Promise<MediaStream> {
   throw lastError;
 }
 
-const translations = {
-  kinyarwanda: {
-    badge: "Gerageza",
-    heroTitle1: "Gerageza",
-    heroTitleItalic: "Ihindurangenga",
-    heroTitle2: "mu gihe nyacyo",
-    heroDesc: "Reba uko sisitemu yacu ikoresha ubwenge bw'ikoranabuhanga ihindura hagati y'ururimi rw'ibimenyetso n'indimi zivugwa mu kanya ako kanya.",
-    tabSignToText: "Ikimenyetso mu magambo",
-    tabTextToSign: "Amagambo ajya mu kimenyetso",
-    leftCardCamera: "Ibisohoka bya Kamera",
-    leftCardText: "Injiza Amagambo",
-    rightCard: "Ibisohoka by'Ubuhinduzi",
-    cameraTitle: "Igaragaza rya Kamera",
-    cameraDesc: "Kanda hano kugirango wemerere kamera utangire gufata ibimenyetso bya KSL.",
-    startCamera: "Murikira Kamera",
-    startingCamera: "Gutangira...",
-    outputLangLabel: "Ururimi rusohoka",
-    addLetter: "+ Inyuguti",
-    addSpace: "+ Akagabane",
-    waitingGestures: "Gutegereza ibimenyetso...",
-    clearAll: "Siba byose",
-    speak: "Vuga",
-    translatedWords: "Amagambo yahinduwe",
-    translatedWordsDesc: "Ikimenyetso cyawe kizahindurwa amagambo hano",
-    emptyMatrix: "Sequence Matrix Empty",
-    accuracy: "Ukuri kw'isuzuma",
-    hideLogs: "Hisha Logs",
-    showLogs: "Pipeline Logs",
-    textPlaceholder: "Andika hano amagambo ushaka guhindura...",
-    translateBtn: "Hindura mu Kimenyetso",
-    recordBtn: "Record & Translate",
-    startTalking: "Vuga amagambo",
-    targetLang: "Ururimi rusohoka",
-    detection: "Detection",
-    waiting: "Gutegereza...",
-  },
-  english: {
-    badge: "Demo",
-    heroTitle1: "Try",
-    heroTitleItalic: "Real-time Translation",
-    heroTitle2: "now",
-    heroDesc: "See how our AI-powered system translates between sign language and spoken languages in real time.",
-    tabSignToText: "Sign to Text",
-    tabTextToSign: "Text to Sign",
-    leftCardCamera: "Camera Input",
-    leftCardText: "Enter Text",
-    rightCard: "Translation Output",
-    cameraTitle: "Camera View",
-    cameraDesc: "Click below to allow camera access and start capturing KSL gestures.",
-    startCamera: "Start Camera",
-    startingCamera: "Starting...",
-    outputLangLabel: "Output language",
-    addLetter: "+ Letter",
-    addSpace: "+ Space",
-    waitingGestures: "Waiting for gestures...",
-    clearAll: "Clear all",
-    speak: "Speak",
-    translatedWords: "Translated Words",
-    translatedWordsDesc: "Your gesture will be translated into words here",
-    emptyMatrix: "Sequence Matrix Empty",
-    accuracy: "Recognition accuracy",
-    hideLogs: "Hide Logs",
-    showLogs: "Pipeline Logs",
-    textPlaceholder: "Type text to convert to sign language...",
-    translateBtn: "Translate to Sign",
-    recordBtn: "Record & Translate",
-    startTalking: "Talk to translate",
-    targetLang: "Target Language",
-    detection: "Detection",
-    waiting: "Loading...",
-  },
-  french: {
-    badge: "Démo",
-    heroTitle1: "Essayez la",
-    heroTitleItalic: "traduction en temps réel",
-    heroTitle2: "maintenant",
-    heroDesc: "Découvrez comment notre système basé sur l'IA traduit entre la langue des signes et les langues parlées en temps réel.",
-    tabSignToText: "Signe en texte",
-    tabTextToSign: "Texte en signe",
-    leftCardCamera: "Entrée caméra",
-    leftCardText: "Saisir du texte",
-    rightCard: "Résultat de la traduction",
-    cameraTitle: "Vue caméra",
-    cameraDesc: "Cliquez ci-dessous pour autoriser l'accès à la caméra et commencer à capturer les gestes KSL.",
-    startCamera: "Démarrer la caméra",
-    startingCamera: "Démarrage...",
-    outputLangLabel: "Langue de sortie",
-    addLetter: "+ Lettre",
-    addSpace: "+ Espace",
-    waitingGestures: "En attente de gestes...",
-    clearAll: "Tout effacer",
-    speak: "Parler",
-    translatedWords: "Mots traduits",
-    translatedWordsDesc: "Votre geste sera traduit en mots ici",
-    emptyMatrix: "Matrice de séquence vide",
-    accuracy: "Précision de reconnaissance",
-    hideLogs: "Masquer les logs",
-    showLogs: "Logs pipeline",
-    textPlaceholder: "Tapez le texte à convertir en langue des signes...",
-    translateBtn: "Traduire en signe",
-    recordBtn: "Record & Translate",
-    startTalking: "Parler pour traduire",
-    targetLang: "Langue cible",
-    detection: "Détection",
-    waiting: "Chargement...",
-  },
-} as const;
+const t = {
+  badge: "Demo",
+  heroTitle1: "Try",
+  heroTitleItalic: "Real-time Translation",
+  heroTitle2: "now",
+  heroDesc: "See how our AI-powered system translates between sign language and spoken languages in real time.",
+  tabSignToText: "Sign to Text",
+  tabTextToSign: "Text to Sign",
+  leftCardCamera: "Camera Input",
+  leftCardText: "Enter Text",
+  rightCard: "Translation Output",
+  cameraTitle: "Camera View",
+  cameraDesc: "Click below to allow camera access and start capturing KSL gestures.",
+  startCamera: "Start Camera",
+  startingCamera: "Starting...",
+  outputLangLabel: "Output language",
+  addLetter: "+ Letter",
+  addSpace: "+ Space",
+  waitingGestures: "Waiting for gestures...",
+  clearAll: "Clear all",
+  translatedWords: "Translated Words",
+  translatedWordsDesc: "Your gesture will be translated into words here",
+  emptyMatrix: "Sequence Matrix Empty",
+  accuracy: "Recognition accuracy",
+  hideLogs: "Hide Logs",
+  showLogs: "Pipeline Logs",
+  textPlaceholder: "Type text to convert to sign language...",
+  translateBtn: "Translate to Sign",
+  recordBtn: "Record & Translate",
+  startTalking: "Talk to translate",
+  targetLang: "Target Language",
+  detection: "Detection",
+  waiting: "Loading...",
+  recentSuggestions: "Your recent translations — tap to use (optional)",
+  suggestedTranslation: "Suggested translation",
+  approvedTranslation: "Approved",
+  approve: "Approve",
+  dismiss: "Dismiss",
+};
 
 export default function InterpreterPage() {
-  const { language } = useLanguage();
-  const t = translations[language];
   const [activeTab, setActiveTab] = useState<"sign-to-text" | "text-to-sign">("sign-to-text");
   const [status, setStatus] = useState<ApiStatus>({ active: false, status: "idle", started_at: null });
   const [prediction, setPrediction] = useState<Prediction>({
@@ -254,18 +193,29 @@ export default function InterpreterPage() {
   const [signPreviewItems, setSignPreviewItems] = useState<SignPreviewItem[]>([]);
   const [signSourceSnapshot, setSignSourceSnapshot] = useState("");
   const [signPreviewNote, setSignPreviewNote] = useState("");
+  const [textSuggestions, setTextSuggestions] = useState<TextSuggestion[]>([]);
+  const [approvedTranslation, setApprovedTranslation] = useState<string | null>(
+    null
+  );
+  const [dismissedTranslation, setDismissedTranslation] = useState<string | null>(
+    null
+  );
+
+  // Keep interpreter output language aligned with the site language.
+  useEffect(() => {
+    setOutputLang("en");
+  }, []);
 
   const recognitionRef = useRef<any>(null);
+  const suggestDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shouldKeepListeningRef = useRef(false);
   const spokenFinalRef = useRef("");
   const speechLocaleIndexRef = useRef(0);
   const sessionIdRef = useRef<string>(sessionStorage.getItem("ksl_session_id") || "");
 
   const speechLocales = useMemo(() => {
-    if (language === "kinyarwanda") return ["rw-RW", "sw-KE", "en-US"];
-    if (language === "french") return ["fr-FR", "fr", "en-US"];
-    return ["en-US"];
-  }, [language]);
+    return ["en-US", "en-GB", "en"];
+  }, []);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -286,7 +236,9 @@ export default function InterpreterPage() {
             interim = `${interim} ${part}`.trim();
           }
         }
-        const combined = `${spokenFinalRef.current} ${interim}`.trim();
+        const combined = stripDisplayMarkup(
+          `${spokenFinalRef.current} ${interim}`.trim()
+        );
         setTextInput(combined);
       };
       rec.onstart = () => setIsRecording(true);
@@ -361,10 +313,53 @@ export default function InterpreterPage() {
       const headers = new Headers(init?.headers || {});
       const sid = sessionIdRef.current;
       if (sid) headers.set("X-Session-Id", sid);
+      const token = localStorage.getItem("ksl_token");
+      if (token) headers.set("Authorization", `Bearer ${token}`);
+      headers.set("X-Device-Id", getDeviceId());
       return fetch(`${API_BASE}${path}`, { ...init, headers });
     },
     []
   );
+
+  useEffect(() => {
+    if (activeTab !== "text-to-sign") {
+      setTextSuggestions([]);
+      return;
+    }
+    const prefix = lastWordPrefix(textInput);
+    const local = getLocalTextSuggestions(prefix, 8);
+    if (suggestDebounceRef.current) clearTimeout(suggestDebounceRef.current);
+
+    const applyMerged = (remote: TextSuggestion[]) => {
+      setTextSuggestions(mergeSuggestions(local, remote, 8));
+    };
+
+    const query = prefix
+      ? `/text-suggestions?q=${encodeURIComponent(prefix)}&limit=8`
+      : "/text-suggestions?limit=6";
+
+    suggestDebounceRef.current = setTimeout(async () => {
+      try {
+        const r = await apiFetch(query);
+        if (!r.ok) {
+          setTextSuggestions(local);
+          return;
+        }
+        const data = (await r.json()) as { suggestions?: TextSuggestion[] };
+        applyMerged(data.suggestions ?? []);
+      } catch {
+        setTextSuggestions(local);
+      }
+    }, 300);
+
+    return () => {
+      if (suggestDebounceRef.current) clearTimeout(suggestDebounceRef.current);
+    };
+  }, [textInput, activeTab, apiFetch]);
+
+  const applyTextSuggestion = useCallback((suggestion: string) => {
+    setTextInput((prev) => applySuggestionToText(prev, suggestion));
+  }, []);
 
   const getJson = useCallback(async <T,>(path: string): Promise<T> => {
     const r = await apiFetch(path);
@@ -479,6 +474,13 @@ export default function InterpreterPage() {
     };
   }, [cameraActive, status.backend, status.status, refresh, startBackendSession]);
 
+  const detectedSignText = stripDisplayMarkup((prediction.text || "").trim());
+
+  useEffect(() => {
+    setDismissedTranslation(null);
+    setApprovedTranslation(null);
+  }, [detectedSignText, outputLang]);
+
   useEffect(() => {
     if (activeTab !== "sign-to-text") return;
     if (status.backend !== "ready") {
@@ -486,7 +488,7 @@ export default function InterpreterPage() {
       setTranslateNote("");
       return;
     }
-    const sourceText = (prediction.text || "").trim();
+    const sourceText = detectedSignText;
     if (!sourceText) {
       setTranslatedText("");
       setTranslateNote("");
@@ -496,7 +498,7 @@ export default function InterpreterPage() {
     const seq = ++translateSeqRef.current;
     const id = window.setTimeout(async () => {
       if (outputLang === "en") {
-        setTranslatedText(sourceText);
+        setTranslatedText(stripDisplayMarkup(sourceText));
         setTranslateNote("");
         return;
       }
@@ -508,11 +510,11 @@ export default function InterpreterPage() {
         });
         const data = (await r.json()) as TranslateResponse;
         if (seq !== translateSeqRef.current) return;
-        setTranslatedText((data.text || sourceText).trim());
+        setTranslatedText(stripDisplayMarkup((data.text || sourceText).trim()));
         if (data.fallback && data.message) {
           setTranslateNote(data.message);
         } else if (!r.ok) {
-          setTranslatedText(sourceText);
+          setTranslatedText(stripDisplayMarkup(sourceText));
           setTranslateNote(
             "Translation service error. Is the backend running at " +
               API_BASE.replace(/\/api$/, "") +
@@ -523,7 +525,7 @@ export default function InterpreterPage() {
         }
       } catch {
         if (seq !== translateSeqRef.current) return;
-        setTranslatedText(sourceText);
+        setTranslatedText(stripDisplayMarkup(sourceText));
         setTranslateNote(
           "Cannot reach the translation API. Start the backend (.\\start_backend.ps1) and use http://127.0.0.1:5000."
         );
@@ -531,7 +533,20 @@ export default function InterpreterPage() {
     }, 500);
 
     return () => window.clearTimeout(id);
-  }, [activeTab, outputLang, prediction.text, status.backend, apiFetch]);
+  }, [activeTab, outputLang, detectedSignText, status.backend, apiFetch]);
+
+  const pendingTranslation = useMemo(() => {
+    if (outputLang === "en") return "";
+    const raw = stripDisplayMarkup(translatedText.trim());
+    if (!raw || raw === detectedSignText) return "";
+    if (dismissedTranslation === raw) return "";
+    return raw;
+  }, [
+    outputLang,
+    translatedText,
+    detectedSignText,
+    dismissedTranslation,
+  ]);
 
   // Frame send loop
   useEffect(() => {
@@ -696,7 +711,11 @@ export default function InterpreterPage() {
 
   const commitLetter = () => apiFetch(`/commit-letter`, { method: "POST" }).then(() => refresh()).catch(() => { });
   const commitSpace = () => apiFetch(`/commit-space`, { method: "POST" }).then(() => refresh()).catch(() => { });
-  const clearText = () => apiFetch(`/clear`, { method: "POST" }).then(() => refresh()).catch(() => { });
+  const clearText = () => {
+    setApprovedTranslation(null);
+    setDismissedTranslation(null);
+    return apiFetch(`/clear`, { method: "POST" }).then(() => refresh()).catch(() => { });
+  };
 
   const fetchFingerSpelling = async () => {
     await fetchFingerSpellingExplicit(textInput);
@@ -712,6 +731,7 @@ export default function InterpreterPage() {
     setSignPreviewItems([]);
     setSignSourceSnapshot("");
     setSignPreviewNote("");
+    setTextSuggestions([]);
     setError("");
   };
 
@@ -719,25 +739,22 @@ export default function InterpreterPage() {
     if (!val.trim()) return;
     setLoading(true);
     try {
-      const r = await fetch(`${API_BASE}/text-to-sign`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+      const r = await apiFetch(`/text-to-sign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: val }),
       });
       if (!r.ok) throw new Error(`${r.status}`);
       const data = await r.json();
+      recordLocalTextUsage(val);
       setSignPreviewItems(data.items || []);
       setSignSourceSnapshot(val);
       setSignPreviewNote(data.note || "");
       setError("");
+      const prefix = lastWordPrefix(val);
+      setTextSuggestions(getLocalTextSuggestions(prefix, 8));
     } catch (e) { setError(e instanceof Error ? e.message : "Could not fetch signs"); }
     setLoading(false);
-  };
-
-  const speakResult = () => {
-    const spoken = (translatedText || prediction.text || "").trim();
-    if (!spoken) return;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(new SpeechSynthesisUtterance(spoken));
   };
 
   const runDuration = useMemo(() => {
@@ -747,311 +764,350 @@ export default function InterpreterPage() {
   }, [status, cameraActive]);
 
   return (
-    <div className="min-h-screen bg-[#fafbfc] dark:bg-background text-foreground font-sans overflow-x-hidden flex flex-col custom-scrollbar border-none relative">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(59,130,246,0.05),transparent)] pointer-events-none" />
-      
+    <PageShell className="interpreter-page custom-scrollbar text-slate-800 relative bg-mesh">
       <Header />
 
-      {/* ═══════════════ MAIN ═══════════════ */}
-      <main className="flex-1 pt-20 md:pt-36 pb-12 container mx-auto px-4 md:px-6 flex flex-col items-center border-none">
+      <main className="relative z-10 mx-auto flex-1 flex w-full max-w-5xl flex-col items-center justify-center px-4 py-8 md:px-6 select-none">
 
-        {/* Hero text */}
-        <div className="text-center max-w-3xl mx-auto mb-10 md:mb-16 relative z-10 border-none px-4">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-ksl-yellow/10 dark:bg-ksl-yellow/5 border border-ksl-yellow/20 text-ksl-yellow font-bold text-[11px] md:text-[13px] mb-6 md:mb-10 tracking-widest uppercase animate-float shadow-none border-none">
-            <span className="w-1.5 h-1.5 rounded-full bg-ksl-yellow animate-pulse" />
+        {/* Hero Leading Heading */}
+        <div className="mb-8 flex flex-col items-center text-center animate-slide-up">
+          <span className="inline-flex items-center gap-2 rounded-full bg-[#90DDF5]/20 border border-[#90DDF5]/40 px-4 py-1.5 text-[11px] font-display font-semibold uppercase tracking-widest text-[#0B252E]/70 mb-5">
             {t.badge}
-          </div>
-          
-          <h1 className="text-[38px] md:text-[64px] font-bold leading-[1.1] mb-6 text-foreground tracking-tight border-none">
-            {language === 'kinyarwanda' ? 'Ihindurangenga' : 'KSL Interpreter'} 
-            <span className="text-ksl-blue">.</span>
+          </span>
+          <h1 className="text-[36px] md:text-[52px] leading-[1.1] tracking-tight text-[#0B252E]">
+            <span className="font-display font-bold">{t.heroTitle1} </span>
+            <span className="font-script text-[#0B252E]">{t.heroTitleItalic}</span>
+            <span className="font-display font-bold"> {t.heroTitle2}</span>
           </h1>
-          
-          <p className="text-[15px] md:text-[20px] text-muted-foreground font-medium leading-relaxed max-w-xl mx-auto tracking-tight border-none opacity-80">
+          <p className="mt-4 max-w-lg text-[15px] font-display font-light text-slate-500 leading-relaxed">
             {t.heroDesc}
           </p>
         </div>
 
-        {/* ─── Tab switcher ─── */}
-        <div className="bg-white/50 dark:bg-white/[0.03] backdrop-blur-sm p-1.5 rounded-3xl flex gap-1.5 shadow-none shadow-black/[0.02] mb-10 md:mb-16 z-10 relative border border-slate-200 dark:border-white/5 transition-all">
+        {/* Compact, clean Tab Switcher centered above the cards */}
+        <div className="mb-6 flex w-full max-w-xs gap-1 rounded-full border border-gray-200 bg-gray-50/80 p-1 shadow-inner animate-slide-up">
           <button
+            type="button"
             onClick={() => setActiveTab("sign-to-text")}
-            className={`flex items-center gap-2.5 px-6 md:px-10 py-3 md:py-4 rounded-2xl text-[14px] md:text-[16px] font-bold transition-all duration-300 border-none ${
+            className={`flex flex-1 items-center justify-center gap-2 rounded-full px-3 py-2.5 text-[12px] font-semibold transition-all duration-200 ${
               activeTab === "sign-to-text"
-                ? "bg-ksl-dark text-white shadow-none shadow-ksl-dark/20 scale-[1.02]"
-                : "text-muted-foreground hover:bg-slate-100 dark:hover:bg-white/5 hover:text-foreground"
+                ? "bg-white text-primary shadow-sm border border-gray-200/50"
+                : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            <IcCamera size={18} /> <span className="sm:inline">{t.tabSignToText}</span><span className="sm:hidden">Sign</span>
+            <IcCamera size={14} />
+            <span>Sign to Text</span>
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab("text-to-sign")}
-            className={`flex items-center gap-2.5 px-6 md:px-10 py-3 md:py-4 rounded-2xl text-[14px] md:text-[16px] font-bold transition-all duration-300 border-none ${
+            className={`flex flex-1 items-center justify-center gap-2 rounded-full px-3 py-2.5 text-[12px] font-semibold transition-all duration-200 ${
               activeTab === "text-to-sign"
-                ? "bg-ksl-blue text-white shadow-none shadow-ksl-blue/20 scale-[1.02]"
-                : "text-muted-foreground hover:bg-slate-100 dark:hover:bg-white/5 hover:text-foreground"
+                ? "bg-white text-primary shadow-sm border border-gray-200/50"
+                : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            <IcType size={18} /> <span className="sm:inline">{t.tabTextToSign}</span><span className="sm:hidden">Text</span>
+            <IcType size={14} />
+            <span>Text to Sign</span>
           </button>
         </div>
 
-        {/* ─── Two panel boxes (Agenda Bento Style) ─── */}
-        <div className="w-full max-w-[1100px] grid md:grid-cols-2 gap-[18px] border-none relative z-10">
+        <div className="grid w-full max-w-[1100px] items-start gap-4 md:grid-cols-2 md:gap-5">
 
-          {/* LEFT card: Input */}
-          <div className="bg-white/80 dark:bg-white/[0.02] backdrop-blur-md border border-slate-200 dark:border-white/5 rounded-[2rem] p-5 md:p-10 flex flex-col gap-6 md:gap-8 shadow-none shadow-black/[0.02] relative overflow-hidden group/card transition-all hover:shadow-black/[0.04]">
-            <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-white/5">
-              <div className="w-1.5 h-6 bg-ksl-blue rounded-full" />
-              <h3 className="font-bold text-[14px] md:text-[16px] tracking-[0.1em] uppercase text-foreground/60">
+          <div
+            className={`interpreter-panel flex flex-col gap-4 p-5 md:gap-5 md:p-6 ${
+              activeTab === "sign-to-text" ? "min-h-[480px] md:min-h-[520px]" : ""
+            }`}
+          >
+            <div className="flex shrink-0 items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="interpreter-panel-title font-display font-bold">
                 {activeTab === "sign-to-text" ? t.leftCardCamera : t.leftCardText}
               </h3>
             </div>
 
             {activeTab === "sign-to-text" ? (
-              /* Camera view */
-              <div className="relative bg-slate-900 rounded-[2rem] overflow-hidden aspect-video flex flex-col items-center justify-center border border-white/5 shadow-none shadow-black/20 group/video">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 pointer-events-none opacity-0 group-hover/video:opacity-100 transition-opacity duration-500" />
-                <video
-                  ref={videoRef}
-                  autoPlay playsInline muted
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${cameraActive ? "opacity-100" : "opacity-0"} border-none`}
-                />
-                <HandSkeletonOverlay videoRef={videoRef} active={cameraActive} />
-                <canvas ref={canvasRef} className="hidden" />
+              <div className="flex min-h-0 flex-1 flex-col">
+                <div className="interpreter-stage relative flex min-h-[260px] flex-1 flex-col overflow-hidden">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${cameraActive ? "opacity-100" : "opacity-0"}`}
+                  />
+                  <HandSkeletonOverlay videoRef={videoRef} active={cameraActive} />
+                  <canvas ref={canvasRef} className="hidden" />
 
-                {!cameraActive && (
-                  <div className="relative z-10 flex flex-col items-center text-center px-4 gap-2 md:gap-4 border-none">
-                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-ksl-blue/10 flex items-center justify-center text-ksl-blue animate-float border-none">
-                      <IcCamera />
+                  {!cameraActive && (
+                    <div className="relative z-10 flex h-full min-h-[240px] flex-col items-center justify-center gap-4 p-6 text-center">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-200 bg-white text-primary shadow-sm">
+                        <IcCamera size={24} />
+                      </div>
+                      <div className="max-w-[260px]">
+                        <h4 className="mb-1.5 font-display text-[16px] font-bold text-slate-800">
+                          {t.cameraTitle}
+                        </h4>
+                        <p className="mb-6 text-[13px] leading-relaxed text-slate-500">
+                          {t.cameraDesc}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={startInterpreter}
+                        disabled={loading}
+                        className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-[13px] font-medium text-white shadow-button transition-all hover:brightness-110 disabled:opacity-50"
+                      >
+                        <FiCamera className="text-sm" />
+                        {loading ? t.startingCamera : t.startCamera}
+                      </button>
                     </div>
-                    <div className="border-none">
-                      <h4 className="font-bold text-[16px] md:text-[18px] mb-2 text-foreground border-none tracking-tight">{t.cameraTitle}</h4>
-                      <p className="text-[13px] md:text-[14px] text-muted-foreground mb-6 max-w-[240px] leading-relaxed border-none">{t.cameraDesc}</p>
-                    </div>
+                  )}
+
+                  {cameraActive && (
                     <button
-                      onClick={startInterpreter}
-                      disabled={loading}
-                      className="px-6 md:px-8 py-2.5 md:py-3.5 rounded-full bg-ksl-blue text-white text-[13px] md:text-[15px] font-bold shadow-none hover:bg-ksl-blue/90 active:scale-95 transition-all disabled:opacity-50 border-none flex items-center gap-2"
+                      type="button"
+                      onClick={stopInterpreter}
+                      className="absolute bottom-4 right-4 z-20 rounded-lg bg-red-500/90 p-2.5 text-white transition-colors hover:bg-red-600"
+                      aria-label="Stop camera"
                     >
-                      <FiCamera className="text-sm md:text-base" />
-                      {loading ? t.startingCamera : t.startCamera}
+                      <FiSquare className="text-base" />
                     </button>
-                  </div>
-                )}
-
-                {cameraActive && (
-                  <button
-                    onClick={stopInterpreter}
-                    className="absolute bottom-4 right-4 z-20 p-3 bg-red-500 text-white rounded-[14px] shadow-none hover:bg-red-600 active:scale-90 transition-all border-none"
-                  >
-                    <FiSquare className="text-lg" />
-                  </button>
-                )}
+                  )}
+                </div>
               </div>
             ) : (
-              <div className="flex flex-col h-full border-none">
-                <div className="flex-1 relative mb-6">
-                  <textarea
-                    value={textInput}
-                    onChange={e => setTextInput(e.target.value)}
-                    placeholder={t.textPlaceholder}
-                    className="w-full h-full min-h-[220px] md:min-h-[260px] bg-slate-50 dark:bg-white/[0.03] rounded-[1.5rem] p-6 text-foreground placeholder:text-muted-foreground/50 text-[15px] md:text-[17px] font-medium resize-none transition-all border border-slate-200 dark:border-white/5 outline-none focus:border-ksl-blue/50"
-                  />
-                  <div className="absolute bottom-4 right-4 text-[11px] font-bold text-muted-foreground/40 tracking-widest uppercase">
-                    UTF-8 Character Stream
+              <div className="flex flex-col gap-3">
+                <div className="interpreter-stage flex flex-col gap-3 p-4 md:p-5">
+                  <div className="relative min-h-[140px]">
+                    <PlainTextEditor
+                      value={textInput}
+                      onChange={setTextInput}
+                      placeholder={t.textPlaceholder}
+                      className="min-h-[160px] w-full border-0 bg-transparent p-0 text-[15px] leading-relaxed text-slate-800 empty:before:text-slate-400 focus:ring-0 md:min-h-[180px]"
+                    />
                   </div>
+                  <RecentTextSuggestions
+                    items={textSuggestions}
+                    onSelect={applyTextSuggestion}
+                    label={t.recentSuggestions}
+                  />
                 </div>
-                
-                <div className="grid grid-cols-12 gap-3 mt-auto">
+                <div className="grid shrink-0 grid-cols-12 gap-2">
                   <button
-                    onClick={toggleRecording}
-                    disabled={loading}
-                    className={`col-span-5 h-[56px] rounded-2xl flex items-center justify-center gap-2.5 transition-all font-bold text-[14px] shadow-none border-none ${
-                      isRecording 
-                        ? "bg-red-500 text-white animate-pulse" 
-                        : "bg-slate-100 dark:bg-white/5 text-foreground hover:bg-slate-200 dark:hover:bg-white/10"
-                    }`}
-                  >
-                    <FiMic className={`text-[18px] ${isRecording ? "text-white" : ""}`} />
-                    <span className="truncate">{isRecording ? "Listening" : "Record"}</span>
-                  </button>
-                  
-                  <button
+                    type="button"
                     onClick={fetchFingerSpelling}
                     disabled={loading || !textInput.trim()}
-                    className="col-span-5 h-[56px] rounded-2xl bg-ksl-blue text-white font-bold text-[14px] shadow-none shadow-ksl-blue/20 hover:bg-ksl-blue/90 active:scale-[0.98] transition-all disabled:opacity-50 border-none flex items-center justify-center gap-2"
+                    className="col-span-10 flex h-11 items-center justify-center gap-2 rounded-full bg-primary text-[13px] font-medium text-white shadow-button transition-all hover:brightness-110 disabled:opacity-40"
                   >
-                    <IcType size={16} />
+                    <IcType size={15} />
                     <span className="truncate">Translate</span>
                   </button>
-
                   <button
+                    type="button"
                     onClick={resetTextToSignInput}
                     disabled={loading || (!textInput.trim() && signPreviewItems.length === 0)}
-                    className="col-span-2 h-[56px] rounded-2xl bg-slate-100 dark:bg-white/5 text-foreground flex items-center justify-center hover:bg-slate-200 dark:hover:bg-white/10 transition-all disabled:opacity-30 border-none"
+                    className="col-span-2 flex h-11 items-center justify-center rounded-full border border-gray-200 text-slate-500 transition-colors hover:bg-gray-50 hover:text-slate-800 disabled:opacity-25"
                     title="Reset"
                   >
-                    <FiRotateCcw className="text-[18px]" />
+                    <FiRotateCcw className="text-base" />
                   </button>
                 </div>
               </div>
             )}
 
-            {/* Language selector footer */}
-            {activeTab === "sign-to-text" && (
-              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
-                <span className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-widest">{t.outputLangLabel}</span>
-                <div className="flex bg-slate-50 dark:bg-white/5 rounded-xl p-1 gap-1 border border-slate-200 dark:border-white/10">
-                  {[["rw", "🇷🇼", "RW"], ["en", "🇺🇸", "EN"], ["fr", "🇫🇷", "FR"]].map(([v, flag, label]) => (
-                    <button
-                      key={v}
-                      onClick={() => setOutputLang(v)}
-                      className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all border-none flex items-center gap-2 ${outputLang === v ? "bg-ksl-blue text-white shadow-none" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                      <span>{flag}</span>
-                      <span>{label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            <div className="mt-auto flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
+              {activeTab === "sign-to-text" ? (
+                <>
+                  <span className="text-[11px] font-medium text-slate-400">
+                    {t.outputLangLabel}
+                  </span>
+                  <span className="text-[11px] font-medium text-slate-600">
+                    {outputLang === "rw"
+                      ? "🇷🇼 RW"
+                      : outputLang === "fr"
+                        ? "🇫🇷 FR"
+                        : "🇺🇸 EN"}
+                  </span>
+                </>
+              ) : (
+                <span className="text-[11px] text-slate-400">
+                  {t.recentSuggestions}
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* RIGHT card: Output */}
-          <div className="bg-ksl-dark dark:bg-white/[0.02] backdrop-blur-xl border border-white/10 dark:border-white/5 rounded-[2rem] p-5 md:p-10 flex flex-col gap-6 md:gap-8 shadow-none relative overflow-hidden transition-all group/output min-h-[480px] md:min-h-[520px]">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent)] pointer-events-none" />
-            <div className="flex items-center justify-between border-b border-white/10 pb-4 z-10 relative">
-              <div className="flex items-center gap-2.5">
-                <div className="w-1.5 h-6 bg-ksl-yellow rounded-full" />
-                <h3 className="font-bold text-[14px] md:text-[16px] tracking-[0.1em] uppercase text-white/60">
-                  {t.rightCard}
-                </h3>
-              </div>
-              {cameraActive && (
-                <div className="text-[12px] font-bold text-ksl-blue tabular-nums border border-ksl-blue/30 bg-ksl-blue/10 px-4 py-1.5 rounded-xl">
+          <div
+            className={`interpreter-panel flex flex-col gap-4 p-5 md:gap-5 md:p-6 ${
+              activeTab === "sign-to-text" ? "min-h-[480px] md:min-h-[520px]" : ""
+            }`}
+          >
+            <div className="flex shrink-0 items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="interpreter-panel-title font-display font-bold">{t.rightCard}</h3>
+              {cameraActive && activeTab === "sign-to-text" && (
+                <span className="rounded-full bg-ksl-blue/15 px-2.5 py-0.5 text-[11px] font-medium tabular-nums text-ksl-blue">
                   {runDuration}
-                </div>
+                </span>
               )}
             </div>
 
             {activeTab === "sign-to-text" ? (
-              <div className="flex-1 bg-[#0a0a0a] rounded-[1.5rem] border-none p-6 flex flex-col min-h-[280px] relative text-white">
+              <div className="interpreter-stage flex min-h-[260px] flex-1 flex-col p-4 text-slate-800 md:p-5">
                 {cameraActive ? (
                   <>
-                    {/* Live detection display */}
-                    <div className="flex items-start gap-3 md:gap-4 mb-4 border-none">
-                      <div className="flex flex-col items-center border-none">
-                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-[16px] bg-ksl-blue flex items-center justify-center border-none shadow-none shadow-ksl-blue/20">
-                          <span className="text-3xl md:text-4xl font-black text-white">{prediction.letter || "—"}</span>
+                    <div className="mb-4 flex items-start gap-3">
+                      <div className="flex flex-col items-center">
+                        <div className="font-display flex h-12 w-12 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 text-xl font-semibold text-primary md:h-14 md:w-14 md:text-2xl">
+                          {prediction.letter || "—"}
                         </div>
-                        <span className="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2 border-none">Detection</span>
+                        <span className="mt-1.5 text-[10px] text-slate-400">
+                          {t.detection}
+                        </span>
                       </div>
-                      <div className="flex flex-col gap-2 pt-1 border-none">
-                        <button onClick={commitLetter} className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-[12px] md:text-[13px] font-bold text-white transition-colors border-none flex items-center gap-1.5">
-                          <FiPlus className="text-xs md:text-sm" />
+                      <div className="flex flex-col gap-1.5 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={commitLetter}
+                          className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 text-[12px] font-medium text-slate-700 transition-colors hover:bg-gray-50"
+                        >
+                          <FiPlus className="text-xs" />
                           <span className="hidden sm:inline">{t.addLetter}</span>
-                          <span className="sm:hidden">Letter</span>
                         </button>
-                        <button onClick={commitSpace} className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-[12px] md:text-[13px] font-bold text-white transition-colors border-none flex items-center gap-1.5">
-                          <FiPlus className="text-xs md:text-sm" />
+                        <button
+                          type="button"
+                          onClick={commitSpace}
+                          className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1.5 text-[12px] font-medium text-slate-700 transition-colors hover:bg-gray-50"
+                        >
+                          <FiPlus className="text-xs" />
                           <span className="hidden sm:inline">{t.addSpace}</span>
-                          <span className="sm:hidden">Space</span>
                         </button>
                       </div>
                     </div>
-                    <div className="mb-4 border-none">
-                      <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 border-none">
-                        <span>Auto confirm (hold sign)</span>
-                        <span>
+                    <div className="mb-3">
+                      <div className="mb-1.5 flex items-center justify-between text-[10px] text-slate-400">
+                        <span>Hold to confirm</span>
+                        <span className="tabular-nums">
                           {(
                             (prediction.hold_progress ?? 0) *
                             parseHoldSeconds(prediction.hold_seconds_required)
                           ).toFixed(1)}
-                          s / {parseHoldSeconds(prediction.hold_seconds_required).toFixed(1)}s
+                          /{parseHoldSeconds(prediction.hold_seconds_required).toFixed(1)}s
                         </span>
                       </div>
-                      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden border-none drop-shadow-none">
+                      <div className="h-0.5 overflow-hidden rounded-full bg-gray-200">
                         <div
-                          className="h-full bg-ksl-yellow transition-all duration-100 border-none shadow-[0_0_8px_rgba(255,255,255,0.4)]"
-                          style={{ width: `${Math.max(0, Math.min((prediction.hold_progress ?? 0) * 100, 100))}%` }}
+                          className="h-full bg-gradient-to-r from-ksl-blue to-sky-400 transition-all duration-100"
+                          style={{
+                            width: `${Math.max(0, Math.min((prediction.hold_progress ?? 0) * 100, 100))}%`,
+                          }}
                         />
                       </div>
                     </div>
-                    {/* Translation text */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar border-none mt-1 md:mt-2">
-                      <p className="text-[18px] md:text-[26px] font-bold leading-snug text-white tracking-tight border-none whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
-                        {translatedText || prediction.text || <span className="text-gray-500 italic font-medium opacity-80">{t.waitingGestures}</span>}
-                        <span className="inline-block w-1 h-5 md:w-1.5 md:h-6 bg-ksl-blue ml-2 animate-pulse align-middle rounded-full border-none" />
-                      </p>
-                      {translateNote && (
-                        <p className="mt-3 text-[13px] font-bold text-ksl-yellow/90 border-none">{translateNote}</p>
+                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                      <div className="flex-1 overflow-y-auto custom-scrollbar">
+                        <p className="text-[14px] md:text-[16px] font-normal leading-relaxed text-slate-800 whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                          {detectedSignText || (
+                            <span className="text-[14px] font-normal text-slate-400">
+                              {t.waitingGestures}
+                            </span>
+                          )}
+                        </p>
+                        {translateNote && (
+                          <p className="mt-2 text-[12px] text-slate-500">{translateNote}</p>
+                        )}
+                      </div>
+                      {outputLang !== "en" && (
+                        <TranslationSuggestionBar
+                          suggestion={pendingTranslation}
+                          approvedText={approvedTranslation}
+                          onApprove={() => {
+                            if (pendingTranslation) {
+                              setApprovedTranslation(pendingTranslation);
+                              setDismissedTranslation(null);
+                            }
+                          }}
+                          onDismiss={() => {
+                            if (pendingTranslation) {
+                              setDismissedTranslation(pendingTranslation);
+                            }
+                          }}
+                          labels={{
+                            suggested: t.suggestedTranslation,
+                            approved: t.approvedTranslation,
+                            approve: t.approve,
+                            dismiss: t.dismiss,
+                          }}
+                        />
                       )}
                     </div>
-                    {/* Footer actions */}
-                    <div className="flex items-center justify-between mt-4 pt-5 border-t border-white/10">
-                      <button onClick={clearText} className="flex items-center gap-2 text-[13px] font-bold text-gray-500 hover:text-red-400 transition-colors border-none">
-                        <FiTrash2 className="text-base" /> <span className="hidden sm:inline">{t.clearAll}</span><span className="sm:hidden">Clear</span>
-                      </button>
-                      <button onClick={speakResult} className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-ksl-blue text-[13px] font-bold text-white hover:bg-ksl-blue/90 transition-colors border-none shadow-none shadow-ksl-blue/20">
-                        <FiVolume2 className="text-base" /> <span className="hidden sm:inline">{t.speak}</span><span className="sm:hidden">Speak</span>
+                    <div className="mt-3 border-t border-gray-100 pt-3">
+                      <button
+                        type="button"
+                        onClick={clearText}
+                        className="flex items-center gap-2 text-[12px] font-medium text-slate-400 transition-colors hover:text-red-500"
+                      >
+                        <FiTrash2 className="text-sm" />
+                        {t.clearAll}
                       </button>
                     </div>
                   </>
                 ) : (
-                  /* Idle state */
-                  <div className="flex-1 flex flex-col items-center justify-center text-center gap-6 border-none group/idle">
-                    <div className="relative">
-                      <div className="absolute -inset-6 bg-ksl-yellow/10 blur-2xl rounded-full group-hover/idle:bg-ksl-yellow/20 transition-all" />
-                      <div className="relative w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 group-hover/idle:text-ksl-yellow transition-colors">
-                        <IcSwap size={32} />
-                      </div>
+                  <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-200 bg-white text-slate-400 shadow-sm">
+                      <IcSwap size={20} />
                     </div>
-                    <div className="max-w-[280px] space-y-2">
-                      <h4 className="font-bold text-[18px] text-white/80 tracking-tight uppercase border-none">{t.translatedWords}</h4>
-                      <p className="text-[14px] text-white/30 leading-relaxed border-none font-medium">{t.translatedWordsDesc}</p>
+                    <div className="max-w-[260px] space-y-1">
+                      <p className="text-[14px] font-medium text-slate-600">{t.translatedWords}</p>
+                      <p className="text-[12px] leading-relaxed text-slate-400">{t.translatedWordsDesc}</p>
                     </div>
                   </div>
                 )}
               </div>
             ) : (
-              /* Text-to-Sign output */
-              <div className="flex-1 bg-[#0a0a0a] rounded-[1.5rem] border-none p-6 flex flex-col min-h-[280px] overflow-hidden text-white relative">
+              <div
+                className={`interpreter-stage flex flex-col overflow-hidden p-3 md:p-4 ${
+                  signPreviewItems.length > 0
+                    ? "h-auto min-h-0"
+                    : "min-h-[220px]"
+                }`}
+              >
                 {signPreviewItems.length > 0 ? (
-                  <SignSequencePresenter items={signPreviewItems} sourceSnapshot={signSourceSnapshot} note={signPreviewNote} />
+                  <SignSequencePresenter
+                    items={signPreviewItems}
+                    sourceSnapshot={signSourceSnapshot}
+                    note={signPreviewNote}
+                  />
                 ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center gap-4 opacity-50 border-none">
-                    <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-white border-none">
-                      <IcSwap />
+                  <div className="flex min-h-[200px] flex-col items-center justify-center gap-3 p-6 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-200 bg-white text-slate-400 shadow-sm">
+                      <IcSwap size={20} />
                     </div>
-                    <p className="text-[12px] font-bold text-gray-500 uppercase tracking-widest border-none mt-2">{t.emptyMatrix}</p>
+                    <p className="text-[13px] text-slate-400">{t.emptyMatrix}</p>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Confidence + accuracy footer */}
-            <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/10 z-10 relative">
-              <div className="flex items-center gap-3 text-[11px] font-bold text-white/40 tracking-widest uppercase">
-                <span className="flex gap-1">
-                  {[1,2,3].map(i => <div key={i} className={`w-1.5 h-1.5 rounded-full ${i <= (prediction.confidence * 3) ? 'bg-ksl-yellow shadow-[0_0_8px_rgba(255,204,0,0.5)]' : 'bg-white/10'}`} />)}
+            <div className="mt-auto flex shrink-0 items-center justify-between border-t border-gray-100 pt-4">
+              <span className="text-[11px] text-slate-400">
+                {t.accuracy}{" "}
+                <span className="tabular-nums text-slate-600">
+                  {Math.round(prediction.confidence * 100) || 95}%
                 </span>
-                {t.accuracy} {Math.round(prediction.confidence * 100) || 95}%
-              </div>
+              </span>
               <button
-                onClick={() => setShowLogs(p => !p)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold tracking-widest uppercase transition-all border ${showLogs ? 'bg-white/10 border-white/20 text-white' : 'bg-transparent border-white/5 text-white/30 hover:border-white/20 hover:text-white'}`}
+                type="button"
+                onClick={() => setShowLogs((p) => !p)}
+                className={`text-[11px] font-medium transition-colors ${showLogs ? "text-primary" : "text-slate-400 hover:text-slate-600"}`}
               >
-                {showLogs ? <FiLogOut size={14} /> : <FiLogIn size={14} />}
                 {showLogs ? t.hideLogs : t.showLogs}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Error banner */}
         {error && (
-          <div className="w-full max-w-[1100px] mt-6 p-5 rounded-[1.5rem] bg-red-500 text-white text-[14px] font-bold flex items-center justify-between gap-4 border-none shadow-none relative z-10">
+          <div className="mt-6 flex w-full max-w-[1100px] items-center justify-between gap-4 rounded-xl border border-red-500/30 bg-red-950/80 px-4 py-3 text-[13px] text-red-100 backdrop-blur-sm">
             <span>{error}</span>
             <button onClick={() => setError("")} className="text-white/60 hover:text-white border-none transition-colors">✕</button>
           </div>
@@ -1059,13 +1115,16 @@ export default function InterpreterPage() {
 
         {/* Logs drawer */}
         {showLogs && (
-          <div className="w-full max-w-[1100px] mt-8 rounded-[2.5rem] bg-ksl-dark dark:bg-white/[0.02] backdrop-blur-xl p-8 overflow-hidden border border-white/5 shadow-none relative z-10">
-            <div className="flex items-center justify-between mb-8 border-none">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-ksl-blue animate-pulse" />
-                <span className="text-[12px] font-black text-white uppercase tracking-[0.2em] border-none opacity-80">Pipeline Telemetry</span>
-              </div>
-              <button onClick={() => setLogs([])} className="text-[12px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border-none">Flush Console</button>
+          <div className="interpreter-panel mt-6 w-full max-w-[1100px] overflow-hidden p-5 md:p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <span className="interpreter-panel-title">Pipeline logs</span>
+              <button
+                type="button"
+                onClick={() => setLogs([])}
+                className="text-[11px] font-medium text-white/40 hover:text-white/70"
+              >
+                Clear
+              </button>
             </div>
             <div className="h-56 overflow-y-auto custom-scrollbar font-mono text-[12px] text-ksl-blue/90 space-y-2.5 border-none px-4">
               {logs.length > 0 ? logs.map((l, i) => (
@@ -1074,9 +1133,8 @@ export default function InterpreterPage() {
                   <span className="break-all leading-relaxed">{l}</span>
                 </div>
               )) : (
-                <div className="flex flex-col items-center justify-center h-full gap-4 opacity-40">
-                  <div className="w-12 h-12 rounded-full border-2 border-dashed border-ksl-blue/30 animate-spin-slow" />
-                  <p className="text-gray-500 font-medium tracking-tight">Listening for telemetry streams...</p>
+                <div className="flex h-full flex-col items-center justify-center gap-2 opacity-40">
+                  <p className="text-[12px] text-white/40">No logs yet</p>
                 </div>
               )}
             </div>
@@ -1085,6 +1143,6 @@ export default function InterpreterPage() {
       </main>
 
       <Footer />
-    </div>
+    </PageShell>
   );
 }

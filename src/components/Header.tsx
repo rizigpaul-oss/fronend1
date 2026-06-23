@@ -1,10 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
-import { Menu, X } from "lucide-react";
+import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { Languages, HelpCircle, Sparkles, Users, X } from "lucide-react";
 import kslLogo from "@/assets/ksl-logo.png";
-import { useLanguage } from "@/context/LanguageContext";
 
 type StoredUser = { id?: string; firstName?: string; lastName?: string; email?: string; role?: string; profilePicture?: string } | null;
 
@@ -21,174 +18,172 @@ function getStoredUser(): StoredUser {
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { language } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<StoredUser>(getStoredUser);
-  const [scrolled, setScrolled] = useState(false);
+  const [user] = useState<StoredUser>(getStoredUser);
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    const onUpdate = () => setUser(getStoredUser());
-    window.addEventListener("ksl-user-update", onUpdate);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("ksl-user-update", onUpdate);
-    };
-  }, []);
-
-  const handleLogout = useCallback(() => {
+  const handleLogout = () => {
     localStorage.removeItem("ksl_token");
     localStorage.removeItem("ksl_user");
     window.dispatchEvent(new Event("ksl-user-update"));
     navigate("/", { replace: true });
-  }, [navigate]);
-
-  const navLinks = [
-    { key: "howItWorks", to: "/how-it-works" },
-    { key: "translate", to: "/translate" },
-    { key: "features", to: "/features" },
-    { key: "about", to: "/about" },
-  ] as const;
-
-  const labels: Record<string, Record<string, string>> = {
-    translate: { kinyarwanda: "Guhindura", english: "Translate", french: "Traduire" },
-    features: { kinyarwanda: "Ibiranga", english: "Features", french: "Fonctionnalités" },
-    howItWorks: { kinyarwanda: "Uko Bikora", english: "How it works", french: "Comment ça marche" },
-    about: { kinyarwanda: "Ibyerekeye", english: "About", french: "À propos" },
-    getStarted: { kinyarwanda: "Iyandikishe", english: "Sign up", french: "S'inscrire" },
-    login: { kinyarwanda: "Injira", english: "Log in", french: "Se connecter" },
-    logout: { kinyarwanda: "Gusohoka", english: "Logout", french: "Se déconnecter" },
-    dashboard: { kinyarwanda: "Konti", english: "Dashboard", french: "Tableau de bord" },
   };
 
+  const navLinks = [
+    { key: "translate", to: "/translate", label: "Translate", icon: Languages },
+    { key: "howItWorks", to: "/how-it-works", label: "How it works", icon: HelpCircle },
+    { key: "features", to: "/features", label: "Features", icon: Sparkles },
+    { key: "about", to: "/about", label: "About", icon: Users },
+  ] as const;
+
   return (
-    <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled 
-          ? "bg-white/70 dark:bg-background/70 backdrop-blur-xl py-3 border-b border-white/20 dark:border-white/5" 
-          : "bg-transparent py-5 border-none"
-      }`}
-    >
-      <div className="max-w-[1200px] mx-auto px-6">
-        <div className="flex items-center justify-between h-12">
-          
-          {/* Logo Section */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <img 
-              src={kslLogo} 
-              alt="KSL Logo" 
-              className="h-8 md:h-11 w-auto transition-transform group-hover:scale-105" 
-            />
-            <span className="font-display font-bold text-xl tracking-tight hidden sm:flex text-foreground">
-              <span className="text-ksl-blue">K</span>
-              <span className="text-ksl-yellow">S</span>
-              <span className="text-ksl-dark dark:text-white">L</span>
+    <>
+      <header className="w-full z-40 relative flex items-center justify-between px-6 py-6 md:px-12 bg-transparent">
+        {/* Left corner: Logo */}
+        <Link to="/" className="flex items-center gap-2 group select-none">
+          <img src={kslLogo} alt="KSL" className="h-7 w-auto object-contain brightness-95" />
+          <span className="font-script text-[28px] tracking-tight text-[#0B252E] lowercase leading-none">
+              ksl<span className="text-[#90DDF5]">.</span>
             </span>
-          </Link>
+        </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.key}
-                to={link.to}
-                className={`text-[15px] font-medium text-foreground transition-all hover:text-ksl-blue ${
-                  location.pathname === link.to ? "opacity-100 text-ksl-blue" : "opacity-80"
-                }`}
-              >
-                {labels[link.key][language]}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Actions Section */}
-          <div className="hidden md:flex items-center justify-end gap-2 shrink-0">
-            <ThemeToggle />
-            {user ? (
-               <>
-                 <Button asChild variant="ghost" className="text-[14px] font-semibold text-foreground hover:bg-muted px-4 h-11 border-none">
-                    <Link to={user.role === "admin" ? "/admin" : "/profile"}>
-                      {labels.dashboard[language]}
-                    </Link>
-                 </Button>
-                 <Button onClick={handleLogout} className="text-[14px] font-semibold rounded-full bg-red-500 text-white px-6 h-11 hover:bg-red-600 transition-colors shadow-none border-none">
-                    {labels.logout[language]}
-                 </Button>
-               </>
-            ) : (
-              <>
-                <Button asChild variant="ghost" className="text-[14px] font-semibold text-foreground hover:bg-muted px-4 h-11 border-none">
-                  <Link to="/auth?tab=login">{labels.login[language]}</Link>
-                </Button>
-                <Button asChild className="text-[14px] font-semibold rounded-full bg-ksl-blue text-white px-6 h-11 hover:bg-ksl-blue/90 transition-colors shadow-none border-none">
-                  <Link to="/auth?tab=register">{labels.getStarted[language]}</Link>
-                </Button>
-              </>
-            )}
-          </div>
-
-          {/* Mobile Right Section */}
-          <div className="flex md:hidden items-center gap-2">
-            <ThemeToggle />
-             <button
-              className="p-2 text-foreground border-none"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+        {/* Right corner: Button group */}
+        <div className="flex items-center bg-[#90DDF5] p-1.5 rounded-full shadow-sm">
+          {/* CTA Button */}
+          {user ? (
+            <Link
+              to={user.role === "admin" ? "/admin" : "/profile"}
+              className="flex items-center gap-2 text-[#0B252E] hover:bg-[#0B252E]/10 font-light text-[13px] md:text-[14px] px-5 py-2.5 rounded-full uppercase tracking-wider transition-all duration-200"
             >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-        </div>
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Dashboard</span>
+            </Link>
+          ) : (
+            <Link
+              to="/auth?tab=register"
+              className="flex items-center gap-2 text-[#0B252E] hover:bg-[#0B252E]/10 font-light text-[13px] md:text-[14px] px-5 py-2.5 rounded-full uppercase tracking-wider transition-all duration-200"
+            >
+              <Languages size={15} strokeWidth={2.5} />
+              <span className="hidden sm:inline">Start Translating</span>
+              <span className="sm:hidden">Translate</span>
+            </Link>
+          )}
 
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden py-6 bg-background animate-in fade-in slide-in-from-top-4 duration-300 mt-4 border-none shadow-xl">
-            <nav className="flex flex-col gap-6 px-2">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.key}
-                  to={link.to}
-                  className={`text-[18px] font-medium transition-colors ${
-                    location.pathname === link.to ? "text-ksl-blue" : "text-muted-foreground"
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {labels[link.key][language]}
-                </Link>
-              ))}
+          {/* Menu Button */}
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            className="flex items-center gap-2 bg-[#0B252E] hover:bg-[#143d4c] text-[#F6F4EF] font-light text-[13px] md:text-[14px] px-5 py-2.5 ml-1 rounded-full uppercase tracking-wider transition-all duration-200"
+          >
+            {/* ||| Icon */}
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-[#90DDF5]" aria-hidden="true">
+              <rect x="1" y="2" width="2" height="8" fill="currentColor" rx="0.5" />
+              <rect x="5" y="2" width="2" height="8" fill="currentColor" rx="0.5" />
+              <rect x="9" y="2" width="2" height="8" fill="currentColor" rx="0.5" />
+            </svg>
+            <span>Menu</span>
+          </button>
+        </div>
+      </header>
+
+      {/* Off-Canvas Navigation Drawer */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden font-display">
+          {/* Backdrop overlay */}
+          <div
+            className="absolute inset-0 bg-[#0B252E]/50 backdrop-blur-sm transition-opacity duration-300"
+            onClick={() => setIsMenuOpen(false)}
+          />
+
+          {/* Drawer Panel */}
+          <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
+            <div className="w-screen max-w-md bg-[#F6F4EF] shadow-card flex flex-col justify-between p-8 relative z-50">
               
-              <div className="pt-6 border-none mt-2 space-y-4">
+              {/* Top Bar */}
+              <div className="flex items-center justify-between">
+                <Link to="/" className="flex items-center gap-2 select-none" onClick={() => setIsMenuOpen(false)}>
+                  <img src={kslLogo} alt="KSL" className="h-7 w-auto object-contain brightness-95" />
+                  <span className="font-display font-bold text-[26px] tracking-tight text-[#0B252E] lowercase leading-none">
+                    ksl<span className="text-[#90DDF5] font-bold">.</span>
+                  </span>
+                </Link>
+
+                <button
+                  onClick={() => setIsMenuOpen(false)}
+                  className="p-2 text-[#0B252E] hover:bg-[#0B252E]/10 rounded-full transition-colors focus:outline-none"
+                  aria-label="Close menu"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              {/* Navigation Links */}
+              <nav className="flex flex-col gap-5 my-10">
+                {navLinks.map((link) => {
+                  const Icon = link.icon;
+                  const isActive = location.pathname === link.to;
+                  return (
+                    <Link
+                      key={link.key}
+                      to={link.to}
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`flex items-center justify-between text-[16px] md:text-[18px] font-display font-medium tracking-tight py-2.5 px-3 rounded-xl transition-all duration-200 ${
+                        isActive
+                          ? "text-[#0B252E] bg-[#90DDF5]/25"
+                          : "text-[#0B252E] hover:text-[#90DDF5] hover:bg-[#0B252E]/5"
+                      }`}
+                    >
+                      <span>{link.label}</span>
+                      <Icon size={18} className={isActive ? "text-[#0B252E]" : "text-[#0B252E]/60"} />
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              {/* Session / Authentication Block */}
+              <div className="flex flex-col gap-2 mt-auto">
                 {user ? (
-                   <div className="flex flex-col gap-3">
-                     <Button asChild variant="ghost" className="w-full justify-start h-12 text-base rounded-xl bg-muted/50 border-none">
-                      <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
-                        {labels.dashboard[language]}
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" className="w-full justify-start h-12 text-base text-red-500 border-none" onClick={handleLogout}>
-                      {labels.logout[language]}
-                    </Button>
-                   </div>
+                  <>
+                    <Link
+                      to={user.role === "admin" ? "/admin" : "/profile"}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="w-full text-center bg-[#0B252E] text-[#F6F4EF] hover:bg-[#143d4c] font-light text-[14px] py-3 rounded-full uppercase tracking-wider transition-colors shadow-sm"
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="w-full text-center border-2 border-[#0B252E] text-[#0B252E] hover:bg-[#0B252E]/5 font-light text-[14px] py-3 rounded-full uppercase tracking-wider transition-colors"
+                    >
+                      Sign Out
+                    </button>
+                  </>
                 ) : (
-                  <div className="flex flex-col gap-3">
-                     <Button asChild variant="ghost" className="w-full justify-center h-12 text-base font-bold rounded-xl bg-muted/50 text-foreground border-none">
-                      <Link to="/auth?tab=login" onClick={() => setIsMenuOpen(false)}>
-                        {labels.login[language]}
-                      </Link>
-                    </Button>
-                    <Button asChild className="w-full bg-ksl-blue text-white rounded-xl h-12 text-base font-bold shadow-none border-none">
-                      <Link to="/auth?tab=register" onClick={() => setIsMenuOpen(false)}>
-                        {labels.getStarted[language]}
-                      </Link>
-                    </Button>
-                  </div>
+                  <>
+                    <Link
+                      to="/auth?tab=login"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="w-full text-center border-2 border-[#0B252E] text-[#0B252E] hover:bg-[#0B252E]/5 font-light text-[14px] py-3 rounded-full uppercase tracking-wider transition-colors"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      to="/auth?tab=register"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="w-full text-center bg-[#0B252E] text-[#F6F4EF] hover:bg-[#143d4c] font-light text-[14px] py-3 rounded-full uppercase tracking-wider transition-colors shadow-sm"
+                    >
+                      Register
+                    </Link>
+                  </>
                 )}
               </div>
-            </nav>
+
+            </div>
           </div>
-        )}
-      </div>
-    </header>
+        </div>
+      )}
+    </>
   );
 };
 

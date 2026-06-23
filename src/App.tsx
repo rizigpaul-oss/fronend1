@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { LanguageProvider } from "./context/LanguageContext";
 import ScrollToTop from "./components/ScrollToTop";
+import ProfileCompletionBanner from "./components/ProfileCompletionBanner";
 import Index from "./pages/Index";
 import InterpreterPage from "./InterpreterPage";
 import Features from "./pages/Features";
@@ -44,7 +45,7 @@ const App = () => (
     <LanguageProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Toaster />
+        <Toaster />
           <Sonner />
           <BrowserRouter
             future={{
@@ -53,6 +54,7 @@ const App = () => (
             }}
           >
             <ScrollToTop />
+            <ProfileCompletionBanner />
             <Routes>
               <Route path="/complete-profile" element={<CompleteProfile />} />
               <Route path="/auth" element={<Auth />} />
@@ -76,6 +78,7 @@ const App = () => (
               <Route path="/settings" element={<ProfileGuard><Settings /></ProfileGuard>} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
+
               <Route
                 path="/admin"
                 element={

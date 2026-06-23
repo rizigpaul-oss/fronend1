@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/context/LanguageContext";
+import { PageShell } from "@/components/layout/PageShell";
 
 const GestureLibrary = () => {
   const { language } = useLanguage();
@@ -28,7 +29,7 @@ const GestureLibrary = () => {
   } as const;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <PageShell className="bg-background text-foreground">
       <div className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-5xl mx-auto">
           <div className="mb-6 flex justify-center md:justify-start">
@@ -100,7 +101,7 @@ const GestureLibrary = () => {
           </section>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

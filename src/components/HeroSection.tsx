@@ -1,294 +1,253 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { useLanguage, type Language } from "@/context/LanguageContext";
-import { Play, Check, Plus } from "lucide-react";
-import heroImg1 from "@/assets/marketing_hero.png";
-import heroImg2 from "@/assets/marketing_about.png";
-import heroImg3 from "@/assets/marketing_demo.png";
-import kslLogo from "@/assets/ksl-logo.png";
-
-const languageContent: Record<
-  Language,
-  {
-    headlinePrefix: string;
-    headlineHighlight: string;
-    description: string;
-    ctaPrimary: string;
-    ctaSecondary: string;
-    bentoCard1: {
-      title: string;
-      date: string;
-      row1Left: string;
-      row1Right: string;
-      row2Left: string;
-      row2Right: string;
-      btn: string;
-    };
-    bentoCard3: string;
-    bentoCard4: {
-      header: string;
-      sub: string;
-      stat1Title: string;
-      stat1Desc: string;
-      stat2Title: string;
-      stat2Desc: string;
-    };
-    bentoCard5: string;
-    watchDemo: string;
-  }
-> = {
-  kinyarwanda: {
-    headlinePrefix: "dusimbuka inzitizi",
-    headlineHighlight: "n'ikimenyetso", 
-    description: "Igenzura ry'imiterere y'intoki mu gihe nyacyo no guhindura hagati y'Ururimi rw'ibimenyetso n'Ikinyarwanda. Guhuza abafite ubumuga bwo kutumva n'abumva.",
-    ctaPrimary: "Tangira Guhindura",
-    ctaSecondary: "koresha kubuntu",
-    bentoCard1: {
-      title: "Guhindura",
-      date: "Mu gihe nyacyo",
-      row1Left: "👋",
-      row1Right: "Muraho",
-      row2Left: "🙏",
-      row2Right: "Murakoze",
-      btn: "Andi magambo..."
-    },
-    bentoCard3: "Guhuza <br/> abantu <br/> bose",
-    bentoCard4: {
-      header: "Imiterere",
-      sub: "Isuzuma nyacyo",
-      stat1Title: "Kuri 96%",
-      stat1Desc: "Yizewe cyane",
-      stat2Title: "Vuba (<1s)",
-      stat2Desc: "Nta gutinda",
-    },
-    bentoCard5: "Sobanukirwa <br/> ibimenyetso <br/> ako kanya",
-    watchDemo: "Reba uko bikora"
-  },
-  english: {
-    headlinePrefix: "breaking barriers",
-    headlineHighlight: "with sign language",
-    description: "Real-time gesture recognition and translation between Kinyarwanda Sign Language and spoken/written Kinyarwanda. Empowering communities to connect.",
-    ctaPrimary: "Start Translating",
-    ctaSecondary: "free for personal use",
-    bentoCard1: {
-      title: "Live Translation",
-      date: "Real-time accuracy",
-      row1Left: "👋",
-      row1Right: "Hello (Muraho)",
-      row2Left: "🙏",
-      row2Right: "Thanks (Murakoze)",
-      btn: "More phrases..."
-    },
-    bentoCard3: "Empowering <br/> seamless <br/> connection",
-    bentoCard4: {
-      header: "System Status",
-      sub: "Live accuracy metrics",
-      stat1Title: "96% Accuracy",
-      stat1Desc: "High Precision",
-      stat2Title: "<1s Latency",
-      stat2Desc: "Instant Translation",
-    },
-    bentoCard5: "Understand <br/> sign language <br/> instantly",
-    watchDemo: "Watch how it works"
-  },
-  french: {
-    headlinePrefix: "briser les barrières",
-    headlineHighlight: "avec les signes",
-    description: "Reconnaissance et traduction des gestes en temps réel. Renforcer les liens entre les communautés sourdes et entendantes rwandaises.",
-    ctaPrimary: "Commencer",
-    ctaSecondary: "gratuit pour tous",
-    bentoCard1: {
-      title: "Traduction en direct",
-      date: "Temps réel",
-      row1Left: "👋",
-      row1Right: "Bonjour (Muraho)",
-      row2Left: "🙏",
-      row2Right: "Merci (Murakoze)",
-      btn: "Plus de phrases..."
-    },
-    bentoCard3: "Une <br/> connexion <br/> fluide",
-    bentoCard4: {
-      header: "État du système",
-      sub: "Précision en direct",
-      stat1Title: "Précision 96%",
-      stat1Desc: "Haute précision",
-      stat2Title: "Latence <1s",
-      stat2Desc: "Traduction instantanée",
-    },
-    bentoCard5: "Comprenez <br/> les signes <br/> instantanément",
-    watchDemo: "Voir la démo"
-  },
-};
+import { Languages, X } from "lucide-react";
+import { FlipWords } from "./ui/flip-words";
 
 const HeroSection = () => {
-  const { language } = useLanguage();
-  const content = languageContent[language];
+  const [isDemoOpen, setIsDemoOpen] = useState(false);
+
+  // Custom organic SVG icons for cards to match the reference image exactly
+  const HouseIcon = (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+      <path d="M3 9.5L12 2L21 9.5V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20.5V9.5Z" fill="#F0EBE1" stroke="#C5B19D" strokeWidth="2"/>
+      <path d="M3 10L12 3L21 10" stroke="#C05C3B" strokeWidth="2.5" strokeLinecap="round"/>
+      <rect x="9" y="14" width="6" height="8" fill="#C5B19D"/>
+    </svg>
+  );
+
+  const BuildingIcon = (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+      <rect x="5" y="2" width="14" height="20" rx="1" fill="#EDE9E3" stroke="#8E9AA6" strokeWidth="2"/>
+      <rect x="8" y="5" width="2" height="3" fill="#8E9AA6"/>
+      <rect x="14" y="5" width="2" height="3" fill="#8E9AA6"/>
+      <rect x="8" y="10" width="2" height="3" fill="#8E9AA6"/>
+      <rect x="14" y="10" width="2" height="3" fill="#8E9AA6"/>
+      <rect x="8" y="15" width="2" height="3" fill="#8E9AA6"/>
+      <rect x="14" y="15" width="2" height="3" fill="#8E9AA6"/>
+    </svg>
+  );
 
   return (
-    <section id="home" className="relative min-h-screen pt-36 lg:pt-40 pb-20 font-sans overflow-hidden border-none text-foreground z-0">
+    <section id="home" className="relative w-full min-h-[85vh] flex items-center justify-center bg-transparent py-12 md:py-20 font-sans overflow-visible z-10">
       
-      {/* Background Video Wrapper (From Header down to middle) */}
-      <div className="absolute top-0 left-0 w-full h-[70vh] -z-10 overflow-hidden bg-slate-100 dark:bg-slate-900 border-none">
-        <iframe 
-          className="absolute top-1/2 left-1/2 w-[100vw] h-[56.25vw] min-h-[70vh] min-w-[177.7vh] -translate-x-1/2 -translate-y-1/2 opacity-30 dark:opacity-40 pointer-events-none"
-          src="https://www.youtube.com/embed/U6fC4Ij608A?autoplay=1&mute=1&loop=1&playlist=U6fC4Ij608A&controls=0&showinfo=0&rel=0&modestbranding=1" 
-          allow="autoplay; encrypted-media" 
-          style={{ border: 0 }}
-        ></iframe>
-        <div className="absolute inset-0 bg-slate-50/50 dark:bg-black/50 pointer-events-none mix-blend-overlay"></div>
-        {/* Bottom Gradient Overlay to fade smoothly horizontally */}
-        <div className="absolute bottom-[-2px] left-0 w-full h-64 bg-gradient-to-t from-slate-50 dark:from-background to-transparent pointer-events-none border-none"></div>
-      </div>
-
-      {/* Solid fallback background covering below the video grid */}
-      <div className="absolute top-[70vh] bottom-0 left-0 w-full bg-slate-50 dark:bg-background -z-20 border-none"></div>
-
-      <div className="w-full mx-auto px-4 text-center relative z-10">
+      <div className="w-full max-w-[1280px] mx-auto px-6 relative flex flex-col items-center">
         
-        {/* Headings Container (Untouched) */}
-        {/* Headings Container (Untouched) */}
-        <div className="bg-white dark:bg-[#111] mx-auto max-w-[1200px] rounded-[3rem] p-6 lg:p-16 pt-16 lg:pt-24 pb-16 lg:pb-24 border-none relative overflow-hidden backdrop-blur-sm bg-white/95 dark:bg-[#111]/95 shadow-none">
-          
-          <h1 style={{ letterSpacing: "-0.04em" }} className="text-[50px] md:text-[85px] lg:text-[105px] font-bold leading-[0.95] text-foreground lowercase mb-8 font-sans mx-auto max-w-5xl relative z-10 border-none transition-all">
-            {content.headlinePrefix} <br className="hidden md:block"/>
-            <span className="text-ksl-blue">{content.headlineHighlight}</span>
-          </h1>
-          
-          <p className="max-w-2xl mx-auto text-[18px] md:text-[22px] text-muted-foreground font-medium leading-relaxed mb-12 tracking-tight relative z-10 border-none">
-            {content.description}
+        {/* Left Side Tagline (Desktop) */}
+        <div className="w-full lg:absolute lg:left-6 lg:top-4 max-w-[220px] text-left mb-10 lg:mb-0 select-none animate-slide-up">
+          <p className="text-[13px] md:text-[14px] font-normal leading-relaxed text-[#0B252E]/70">
+            The integrated sign language translation app for all your communication needs.
           </p>
+        </div>
 
-          {/* Primary Action Buttons inline (No absolute positioning) */}
-          <div className="flex flex-col items-center justify-center w-full z-20 relative mb-16 lg:mb-24">
-            <Button asChild className="h-[64px] px-12 rounded-full bg-ksl-blue text-white hover:bg-ksl-blue/90 font-bold text-[18px] active:scale-95 transition-transform cursor-pointer border-none shadow-none">
-              <Link to="/translate">{content.ctaPrimary}</Link>
-            </Button>
-            <p className="mt-4 text-[13px] text-ksl-dark font-bold px-5 py-2 bg-slate-100 dark:bg-black/20 rounded-full tracking-tight border-none shadow-none">
-              {content.ctaSecondary}
-            </p>
+        {/* Central Display Headline Container */}
+        <div className="w-full flex flex-col items-center text-center mt-6 lg:mt-16 relative">
+          
+          {/* Row 1: MAKE [WATCH DEMO] SIGN */}
+          <div className="flex flex-wrap items-center justify-center gap-x-4 md:gap-x-8 gap-y-3 md:gap-y-4 max-w-5xl select-none">
+            <span className="font-display font-black text-[#0B252E] uppercase tracking-tighter text-[7.5vw] md:text-[6vw] lg:text-[6.5vw] leading-none whitespace-nowrap">
+              Make
+            </span>
+
+            {/* Inlined Watch Demo Card (Triggering Popup) */}
+            <button
+              onClick={() => setIsDemoOpen(true)}
+              className="inline-flex flex-col justify-between w-[120px] h-[75px] md:w-[170px] md:h-[105px] bg-[#D5C7B1] hover:bg-[#c4b69d] p-3 md:p-4 rounded-2xl md:rounded-[22px] transition-all hover:scale-105 duration-200 shadow-sm text-left group"
+              aria-label="Open watch demo video"
+            >
+              <span className="text-[#0B252E] font-bold text-[9px] md:text-[10px] uppercase tracking-wider leading-none">
+                Watch Demo
+              </span>
+              <div className="flex justify-end items-end w-full">
+                <span className="text-[#0B252E] font-bold text-[18px] md:text-[24px] leading-none group-hover:translate-x-1 transition-transform">
+                  ▷
+                </span>
+              </div>
+            </button>
+
+            <span className="font-display font-black text-[#0B252E] uppercase tracking-tighter text-[7.5vw] md:text-[6vw] lg:text-[6.5vw] leading-none whitespace-nowrap">
+              Sign
+            </span>
           </div>
 
-          {/* Bento Section */}
-          <div className="relative border-none">
-             {/* Staggered Grid Container */}
-             <div className="flex flex-col md:flex-row items-center md:items-end justify-center gap-[18px] w-full max-w-[1000px] mx-auto scale-95 md:scale-100 z-10 relative border-none">
-               
-               {/* Card 1: KSL Dark UI mock - Tall */}
-               <div className="w-[300px] md:w-[230px] lg:w-[250px] h-[370px] lg:h-[390px] bg-ksl-dark rounded-[24px] p-5 text-left flex flex-col text-white transition-transform hover:-translate-y-2 shrink-0 group shadow-lg border-none order-1 relative overflow-hidden">
+          {/* Row 2: LANGUAGE, REALLY WORK */}
+          <div className="relative mt-3 md:mt-6 text-center select-none z-10">
+            <span className="font-display font-black text-[#0B252E] uppercase tracking-tighter text-[7.5vw] md:text-[6vw] lg:text-[6.5vw] leading-none block whitespace-nowrap">
+              Language, <FlipWords words={["really", "truly", "always", "easily"]} className="text-[#0B252E] lowercase font-script px-1 align-baseline" /> Work
+            </span>
 
-                  <p className="text-[12px] text-ksl-yellow font-bold mb-1 tracking-widest uppercase relative border-none">{content.bentoCard1.title}</p>
-                  <h3 className="text-[18px] font-bold mb-6 tracking-tight relative border-none">{content.bentoCard1.date}</h3>
-                  
-                  <div className="flex items-center gap-3 w-full mb-4 relative border-none">
-                    <span className="text-[20px] font-medium text-white/50 w-8 border-none">{content.bentoCard1.row1Left}</span>
-                    <div className="bg-ksl-blue text-white rounded-2xl flex-1 p-3.5 font-bold flex items-center gap-3 shadow-md border-none">
-                      <span className="text-[13px] tracking-tight border-none">{content.bentoCard1.row1Right}</span>
-                    </div>
-                  </div>
+            {/* Hand-drawn thin double SVG underline */}
+            <div className="absolute left-[5%] right-[5%] bottom-[-16px] md:bottom-[-20px] h-[6px] md:h-[10px] pointer-events-none z-0">
+              <svg width="100%" height="100%" viewBox="0 0 600 12" fill="none" preserveAspectRatio="none">
+                <path
+                  d="M 10 4 Q 300 8, 590 4"
+                  stroke="#0B252E"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  fill="none"
+                />
+                <path
+                  d="M 25 8 Q 300 10, 575 7"
+                  stroke="#0B252E"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  fill="none"
+                />
+              </svg>
+            </div>
+          </div>
 
-                  <div className="flex items-center gap-3 w-full mb-4 relative border-none">
-                    <span className="text-[20px] font-medium text-white/50 w-8 border-none">{content.bentoCard1.row2Left}</span>
-                    <div className="bg-white/10 text-gray-300 rounded-2xl flex-1 p-3.5 flex items-center gap-3 border-none">
-                      <span className="text-[13px] font-medium tracking-tight text-white border-none">{content.bentoCard1.row2Right}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 w-full mt-auto mb-1 relative border-none">
-                    <div className="bg-white/10 text-gray-300 rounded-2xl flex-1 p-3.5 flex items-center justify-center gap-2 border-none hover:bg-white/20 transition-all cursor-pointer">
-                      <span className="w-4 h-4 rounded-[4px] border-none bg-white/20 flex items-center justify-center text-white">
-                         <Plus size={12} />
-                      </span>
-                      <span className="text-[13px] font-medium tracking-tight border-none">{content.bentoCard1.btn}</span>
-                    </div>
-                  </div>
-               </div>
+          {/* ================= FLOATING STATUS CARDS ================= */}
 
-               {/* Inner flex section for bottom cards */}
-               <div className="flex gap-[18px] lg:gap-5 flex-col xs:flex-row order-2 md:order-2 border-none">
-                 {/* Card 2: Photo Square */}
-                 <div className="w-[300px] xs:w-[190px] lg:w-[200px] h-[200px] lg:h-[220px] rounded-[24px] overflow-hidden transition-transform hover:-translate-y-2 shrink-0 border-none">
-                    <img src={heroImg2} className="w-full h-full object-cover scale-[1.1] border-none" alt="User presenting KSL" />
-                 </div>
+          {/* Card 1: HOME Anika Davis */}
+          <div className="absolute left-[15%] top-[-80px] hidden md:flex items-center gap-2 select-none animate-float">
+            <div className="flex items-center gap-2.5 bg-[#EDE7DD] border border-[#0B252E]/5 pl-2.5 pr-4 py-1.5 rounded-xl shadow-sm">
+              {HouseIcon}
+              <div className="flex flex-col text-left leading-tight">
+                <span className="text-[8px] font-black uppercase text-[#0B252E]/60 tracking-wider">
+                  Home
+                </span>
+                <span className="text-[14px] font-bold text-[#0B252E] font-script">
+                  Anika Davis
+                </span>
+              </div>
+            </div>
+            <img
+              src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80"
+              alt="Anika Davis"
+              className="w-7 h-7 rounded-full border border-white/50 object-cover shadow-sm -ml-0.5"
+            />
+          </div>
 
-                 {/* Card 3: Solid KSL Blue text card */}
-                 <div className="w-[300px] xs:w-[190px] lg:w-[200px] h-[200px] lg:h-[220px] rounded-[24px] p-6 bg-ksl-blue text-white text-left flex flex-col justify-end transition-transform hover:-translate-y-2 shrink-0 border-none shadow-sm">
-                    <h3 className="text-[26px] lg:text-[28px] font-bold leading-[1.05] tracking-tight mb-[1px] font-sans border-none" dangerouslySetInnerHTML={{ __html: content.bentoCard3 }}></h3>
-                    <div className="mt-4 flex flex-col gap-1.5 self-end absolute right-5 bottom-8 border-none">
-                       <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-                       <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-                       <span className="w-1.5 h-1.5 rounded-full bg-ksl-yellow"></span>
-                    </div>
-                 </div>
-               </div>
+          {/* Card 2: OFFICE Jasper Williams */}
+          <div className="absolute right-[18%] top-[-100px] hidden md:flex items-center gap-2 select-none animate-float animation-delay-200">
+            <div className="flex items-center gap-2.5 bg-[#EDE7DD] border border-[#0B252E]/5 pl-2.5 pr-4 py-1.5 rounded-xl shadow-sm">
+              {BuildingIcon}
+              <div className="flex flex-col text-left leading-tight">
+                <span className="text-[8px] font-black uppercase text-[#0B252E]/60 tracking-wider">
+                  Office
+                </span>
+                <span className="text-[14px] font-bold text-[#0B252E] font-script">
+                  Jasper Williams
+                </span>
+              </div>
+            </div>
+            <img
+              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80"
+              alt="Jasper Williams"
+              className="w-7 h-7 rounded-full border border-white/50 object-cover shadow-sm -ml-0.5"
+            />
+          </div>
 
-               {/* Right Side Inner Container */}
-               <div className="flex gap-[18px] lg:gap-5 flex-col md:flex-row order-3 md:items-end border-none">
-                 
-                 {/* Card 4: Solid KSL Yellow vertical card (Pushed UP!) */}
-                 <div className="w-[300px] md:w-[200px] lg:w-[210px] h-[250px] lg:h-[260px] rounded-[24px] p-4 bg-ksl-yellow text-slate-900 text-left flex flex-col md:self-start md:mb-[90px] transition-transform hover:-translate-y-2 shrink-0 shadow-sm border-none relative z-0">
-                    <div className="flex items-center gap-3 mb-4 mt-2 px-1 border-none">
-                       <div className="w-10 h-10 rounded-full bg-white overflow-hidden shadow-sm flex items-center justify-center p-1.5 border-none">
-                         <img src={kslLogo} className="w-full h-full object-contain border-none" />
-                       </div>
-                       <div className="flex items-end gap-1.5 relative top-0.5 border-none">
-                          <p className="text-[17px] font-bold leading-none tracking-tight border-none">{content.bentoCard4.header}</p>
-                       </div>
-                    </div>
-                    
-                    <p className="text-[12px] text-slate-800 font-bold mb-3 px-1 tracking-tight border-none">{content.bentoCard4.sub}</p>
-                    
-                    <div className="flex flex-col gap-2 relative z-20 border-none">
-                       <div className="bg-slate-900 text-white p-2.5 rounded-2xl flex items-center gap-3 shadow-md border-none">
-                         <div className="bg-ksl-blue text-white pt-1.5 pb-1 px-2.5 rounded-xl text-center leading-[1.1] border-none">
-                            <p className="text-[10px] font-bold capitalize relative border-none">Acc</p>
-                            <p className="text-[16px] font-black tracking-tight border-none">96</p>
-                         </div>
-                         <div className="flex-1 border-none">
-                            <p className="text-[14px] font-bold tracking-tight leading-none mb-1 border-none">{content.bentoCard4.stat1Title}</p>
-                            <p className="text-[11px] text-gray-300 font-medium border-none">{content.bentoCard4.stat1Desc}</p>
-                         </div>
-                       </div>
-                       
-                       <div className="bg-slate-900 text-white p-2.5 rounded-2xl flex items-center gap-3 shadow-md border-none relative -mt-1 group z-10 hover:z-30 hover:-translate-y-1 transition-transform">
-                         <div className="bg-white text-black pt-1.5 pb-1 px-2.5 rounded-xl text-center leading-[1.1] border-none">
-                            <p className="text-[10px] font-bold capitalize border-none">Lat</p>
-                            <p className="text-[16px] font-black tracking-tight border-none">&lt;1</p>
-                         </div>
-                         <div className="flex-1 border-none">
-                            <p className="text-[14px] font-bold tracking-tight leading-none mb-1 text-white border-none">{content.bentoCard4.stat2Title}</p>
-                            <p className="text-[11px] text-gray-300 font-medium border-none">{content.bentoCard4.stat2Desc}</p>
-                         </div>
-                       </div>
-                    </div>
-                 </div>
+          {/* Card 3: OFFICE Sienna Ross */}
+          <div className="absolute left-[54%] bottom-[-110px] hidden md:flex items-center gap-2 select-none animate-float animation-delay-300">
+            <div className="flex items-center gap-2.5 bg-[#EDE7DD] border border-[#0B252E]/5 pl-2.5 pr-4 py-1.5 rounded-xl shadow-sm">
+              {BuildingIcon}
+              <div className="flex flex-col text-left leading-tight">
+                <span className="text-[8px] font-black uppercase text-[#0B252E]/60 tracking-wider">
+                  Office
+                </span>
+                <span className="text-[14px] font-bold text-[#0B252E] font-script">
+                  Sienna Ross
+                </span>
+              </div>
+            </div>
+            <img
+              src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&auto=format&fit=crop&q=80"
+              alt="Sienna Ross"
+              className="w-7 h-7 rounded-full border border-white/50 object-cover shadow-sm -ml-0.5"
+            />
+          </div>
 
-                 {/* Card 5: Tall Image with Play Button */}
-                 <div className="w-[300px] md:w-[230px] lg:w-[250px] h-[370px] lg:h-[390px] rounded-[24px] overflow-hidden shadow-md relative transition-transform hover:-translate-y-2 shrink-0 group bg-[#090b10] border-none">
-                    <img src={heroImg3} className="w-full h-full object-cover scale-[1.05] opacity-80 border-none" alt="Video demo" />
-                    
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/80 pointer-events-none border-none"></div>
-                    
-                    <div className="absolute top-6 left-5 right-6 border-none">
-                      <h3 className="text-white text-[25px] font-bold leading-[1.05] tracking-tight text-left drop-shadow-lg border-none" dangerouslySetInnerHTML={{ __html: content.bentoCard5 }}></h3>
-                    </div>
-                    
-                    <div className="absolute bottom-6 left-5 right-5 w-[calc(100%-40px)] 
-                                    bg-white/10 backdrop-blur-md rounded-full 
-                                    flex items-center gap-3 p-1.5 pl-2 cursor-pointer 
-                                    group-hover:bg-white/20 transition-colors border-none">
-                       <div className="w-10 h-10 bg-ksl-yellow rounded-full flex items-center justify-center text-ksl-dark shrink-0 transition-transform group-hover:scale-105 shadow-md shadow-ksl-yellow/50 border-none">
-                          <Play fill="currentColor" size={16} className="ml-0.5" />
-                       </div>
-                       <span className="text-white font-medium text-[13px] leading-tight tracking-tight drop-shadow-md border-none">{content.watchDemo}</span>
-                    </div>
-                 </div>
+          {/* Card 4: HOME Ollie Carter */}
+          <div className="absolute right-[5%] bottom-[-80px] hidden lg:flex items-center gap-2 select-none animate-float">
+            <div className="flex items-center gap-2.5 bg-[#EDE7DD] border border-[#0B252E]/5 pl-2.5 pr-4 py-1.5 rounded-xl shadow-sm">
+              {HouseIcon}
+              <div className="flex flex-col text-left leading-tight">
+                <span className="text-[8px] font-black uppercase text-[#0B252E]/60 tracking-wider">
+                  Home
+                </span>
+                <span className="text-[14px] font-bold text-[#0B252E] font-script">
+                  Ollie Carter
+                </span>
+              </div>
+            </div>
+            <img
+              src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80"
+              alt="Ollie Carter"
+              className="w-7 h-7 rounded-full border border-white/50 object-cover shadow-sm -ml-0.5"
+            />
+          </div>
 
-               </div>
-               
-             </div>
+        </div>
+
+        {/* Bottom Left CTA & Curly Arrow */}
+        <div className="w-full flex flex-col md:flex-row items-center md:items-start justify-start mt-20 md:mt-24 relative self-start">
+          
+          {/* Refined Curly Arrow pointing to button */}
+          <div className="absolute left-[160px] top-[-110px] hidden md:block w-[110px] h-[110px] text-[#0B252E] opacity-95 select-none pointer-events-none">
+            <svg viewBox="0 0 100 100" fill="none" className="w-full h-full">
+              <path
+                d="M 75,15 
+                   C 60,10 40,25 45,50 
+                   C 50,75 80,75 75,50 
+                   C 70,25 35,50 20,85"
+                stroke="currentColor"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                fill="none"
+              />
+              {/* Perfectly aligned arrowhead pointing down-left */}
+              <path
+                d="M 32,72 L 20,85 L 18,65"
+                stroke="currentColor"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </svg>
+          </div>
+
+          {/* Primary Action Button */}
+          <div className="flex flex-col items-center md:items-start gap-4 z-10 animate-slide-up animation-delay-200">
+            <Link
+              to="/translate"
+              className="flex items-center gap-3 bg-[#90DDF5] hover:bg-[#74cfeb] text-[#0B252E] font-light text-[14px] md:text-[15px] px-7 py-4 rounded-full uppercase tracking-wider transition-all duration-200 shadow-button select-none hover:-translate-y-0.5"
+            >
+              <Languages size={16} strokeWidth={2.5} />
+              <span>Start Translating</span>
+            </Link>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* YouTube Modal Popup */}
+      {isDemoOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0B252E]/70 backdrop-blur-sm p-4 animate-reveal">
+          <div
+            className="absolute inset-0 cursor-pointer"
+            onClick={() => setIsDemoOpen(false)}
+          />
+          <div className="relative w-full max-w-4xl aspect-video bg-black rounded-2xl overflow-hidden shadow-card border border-white/10 z-10">
+            <button
+              onClick={() => setIsDemoOpen(false)}
+              className="absolute top-4 right-4 bg-black/60 hover:bg-black/90 text-white p-2 rounded-full transition-colors z-20 border border-white/10"
+              aria-label="Close video"
+            >
+              <X size={20} />
+            </button>
+            <iframe
+              className="w-full h-full"
+              src="https://www.youtube.com/embed/5aLh7cEexm8?autoplay=1"
+              title="KSL Demo Video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
           </div>
         </div>
-      </div>
+      )}
     </section>
   );
 };

@@ -51,12 +51,6 @@ const menuItems = [
     submenu: null,
   },
   {
-    title: "Manage Gestures",
-    icon: HandHeart,
-    url: "/admin/gestures",
-    submenu: null,
-  },
-  {
     title: "User Management",
     icon: Users,
     url: "/admin/users",

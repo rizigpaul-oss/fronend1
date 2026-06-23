@@ -73,8 +73,9 @@ export default {
         "2xl": "calc(var(--radius) + 8px)",
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        display: ['Poppins', 'sans-serif'],
+        sans: ['"Google Sans Flex"', 'sans-serif'],
+        display: ['Comfortaa', 'sans-serif'],
+        script: ['Satisfy', 'cursive'],
       },
       keyframes: {
         "accordion-down": {
@@ -97,12 +98,22 @@ export default {
           "0%, 100%": { transform: "rotate(-3deg)" },
           "50%": { transform: "rotate(3deg)" },
         },
+        "pulse-glow": {
+          "0%, 100%": { opacity: "0.8", transform: "scale(1)", filter: "brightness(1)" },
+          "50%": { opacity: "1", transform: "scale(1.05)", filter: "brightness(1.2)" },
+        },
+        "reveal": {
+          "from": { opacity: "0", clipPath: "inset(0 100% 0 0)" },
+          "to": { opacity: "1", clipPath: "inset(0 0 0 0)" },
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.5s ease-out",
         "slide-in-right": "slide-in-right 0.5s ease-out",
+        "pulse-glow": "pulse-glow 3s ease-in-out infinite",
+        "reveal": "reveal 1s cubic-bezier(0.77, 0, 0.175, 1) forwards",
         wiggle: "wiggle 1s ease-in-out infinite",
       },
     },

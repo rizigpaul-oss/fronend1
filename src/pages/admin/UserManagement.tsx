@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, UserPlus, Users, UserCheck, ShieldAlert, Mail, Clock, Shield, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, Sparkles, UserX } from "lucide-react";
+import { Search, UserPlus, Users, UserCheck, ShieldAlert, Mail, Clock, Shield, Edit, Trash2, ChevronLeft, ChevronRight, Loader2, Sparkles, UserX, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getUsers, inviteUser, updateUser, deleteUser } from "@/lib/api";
+import { getUsers, getUserById, inviteUser, updateUser, deleteUser } from "@/lib/api";
 import { toast } from "sonner";
 
 type AdminUser = {
@@ -27,6 +27,15 @@ type AdminUser = {
   role: "admin" | "moderator" | "viewer";
   status: "Active" | "Invited" | "Disabled";
   joinedAt: string;
+  profileCompleted?: boolean;
+  profileCompletionRequested?: boolean;
+  userType?: string;
+  purpose?: string;
+  communicationMode?: string;
+  institution?: string;
+  address?: string;
+  additionalInfo?: string;
+  updatedAt?: string;
 };
 
 const statusBadge: Record<AdminUser["status"], string> = {
@@ -57,6 +66,25 @@ const UserManagement = () => {
   
   // Edit State
   const [editUser, setEditUser] = useState<AdminUser | null>(null);
+
+  // Profile details State
+  const [profileUser, setProfileUser] = useState<AdminUser | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  const openProfile = async (user: AdminUser) => {
+    setProfileUser(user); // show modal immediately with cached data
+    try {
+      setProfileLoading(true);
+      const fresh = await getUserById(user.id);
+      console.log("Fresh user data from API:", fresh);
+      setProfileUser(fresh);
+    } catch (err) {
+      console.error("Failed to fetch fresh user data:", err);
+      // keep the cached version already shown
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -144,12 +172,25 @@ const UserManagement = () => {
     }
   };
 
+  const handleRequestProfileCompletion = async (userId: string, requested: boolean) => {
+    try {
+      const updated = await updateUser(userId, { profileCompletionRequested: requested });
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, ...updated } : u)));
+      if (profileUser && profileUser.id === userId) {
+        setProfileUser({ ...profileUser, ...updated });
+      }
+      toast.success(requested ? "Profile completion requested." : "Profile completion request dismissed.");
+    } catch {
+      toast.error("Failed to update profile request.");
+    }
+  };
+
   const totalUsers = users.length;
   const activeCount = users.filter((u) => u.status === "Active").length;
   const adminCount = users.filter((u) => u.role === "admin").length;
 
   return (
-    <div className="bg-slate-950 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-950/40 via-slate-950 to-slate-950 min-h-screen p-6 -mx-6 -mt-6 xl:p-10 pb-16 text-slate-50 transition-all duration-300">
+    <div className="bg-slate-950 min-h-screen p-6 -mx-6 -mt-6 xl:p-10 pb-16 text-slate-50">
       
       {/* Modern Header Section */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-8 mb-10 animate-in slide-in-from-top-4 duration-500">
@@ -158,7 +199,7 @@ const UserManagement = () => {
             <Sparkles className="w-3.5 h-3.5 mr-1.5" />
             Workspace Administration
           </Badge>
-          <h1 className="text-3xl lg:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 drop-shadow-sm pb-1">
+          <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-white pb-1">
             Team Directory
           </h1>
           <p className="text-slate-400 max-w-lg">
@@ -167,16 +208,16 @@ const UserManagement = () => {
         </div>
         
         {/* Quick Metric Pills */}
-        <div className="flex flex-wrap lg:flex-nowrap gap-3 xl:gap-4">
-          <div className="bg-slate-900/60 backdrop-blur-md border border-white/5 rounded-full px-5 py-2.5 flex items-center gap-3 shadow-lg hover:bg-slate-800/80 transition-colors">
+          <div className="flex flex-wrap lg:flex-nowrap gap-3 xl:gap-4">
+          <div className="bg-slate-900/60 backdrop-blur-md border border-white/5 rounded-full px-5 py-2.5 flex items-center gap-3 shadow-none transition-colors">
             <div className="bg-blue-500/20 p-1.5 rounded-full"><Users className="w-4 h-4 text-blue-400" /></div>
             <span className="text-sm font-bold text-white">{totalUsers} <span className="font-medium text-slate-400 ml-1">Total</span></span>
           </div>
-          <div className="bg-emerald-950/20 backdrop-blur-md border border-emerald-500/10 rounded-full px-5 py-2.5 flex items-center gap-3 shadow-lg hover:bg-emerald-950/40 transition-colors">
+          <div className="bg-emerald-950/20 backdrop-blur-md border border-emerald-500/10 rounded-full px-5 py-2.5 flex items-center gap-3 shadow-none transition-colors">
             <div className="bg-emerald-500/20 p-1.5 rounded-full"><UserCheck className="w-4 h-4 text-emerald-400" /></div>
             <span className="text-sm font-bold text-white">{activeCount} <span className="font-medium text-emerald-200/50 ml-1">Active</span></span>
           </div>
-          <div className="bg-indigo-950/20 backdrop-blur-md border border-indigo-500/10 rounded-full px-5 py-2.5 flex items-center gap-3 shadow-lg hover:bg-indigo-950/40 transition-colors">
+          <div className="bg-indigo-950/20 backdrop-blur-md border border-indigo-500/10 rounded-full px-5 py-2.5 flex items-center gap-3 shadow-none transition-colors">
             <div className="bg-indigo-500/20 p-1.5 rounded-full"><ShieldAlert className="w-4 h-4 text-indigo-400" /></div>
             <span className="text-sm font-bold text-white">{adminCount} <span className="font-medium text-indigo-200/50 ml-1">Admins</span></span>
           </div>
@@ -184,7 +225,7 @@ const UserManagement = () => {
       </div>
 
       {/* Smart Toolbar Layer */}
-      <div className="bg-[#1e293b]/70 backdrop-blur-xl border border-white/10 p-3 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4 mb-10 z-10 shadow-2xl shadow-indigo-900/10 animate-in fade-in duration-700">
+      <div className="bg-[#1e293b]/70 backdrop-blur-xl border border-white/10 p-3 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4 mb-10 z-10 shadow-none animate-in fade-in duration-700">
         
         {/* Search */}
         <div className="relative w-full md:max-w-md group">
@@ -206,7 +247,7 @@ const UserManagement = () => {
                 onClick={() => setRoleFilter(r)} 
                 className={`px-4 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap ${
                   roleFilter === r 
-                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md' 
+                    ? 'bg-white/10 text-white border border-white/10' 
                     : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -217,7 +258,7 @@ const UserManagement = () => {
 
           <Button 
             onClick={() => setIsInviteOpen(true)} 
-            className="w-full sm:w-auto h-11 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-xl shadow-lg shadow-indigo-500/25 border-0 hover:scale-105 transition-transform font-bold"
+            className="w-full sm:w-auto h-11 px-6 bg-white/10 hover:bg-white/15 text-white rounded-xl border border-white/10 transition-colors font-bold"
           >
             <UserPlus className="w-4 h-4 mr-2.5" /> Invite Member
           </Button>
@@ -246,13 +287,22 @@ const UserManagement = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-in slide-in-from-bottom-8 duration-700 fade-in">
           {paginatedUsers.map((user) => (
-            <div key={user.id} className="relative group bg-[#1e293b]/60 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-xl hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-indigo-500/20 hover:border-indigo-500/40 transition-all duration-300 flex flex-col justify-between h-full overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div
+              key={user.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => openProfile(user)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") openProfile(user);
+              }}
+              className="relative group cursor-pointer bg-[#1e293b]/60 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-none hover:-translate-y-1 hover:border-white/20 transition-all duration-300 flex flex-col justify-between h-full overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-white/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               
               <div>
                 <div className="flex justify-between items-start mb-6">
                   <div className="flex gap-4 items-center">
-                    <div className="h-14 w-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold shadow-lg flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                    <div className="h-14 w-14 rounded-full bg-white/10 flex items-center justify-center text-white text-xl font-bold border border-white/10 flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0 transition-transform duration-300 group-hover:translate-x-1">
@@ -282,11 +332,27 @@ const UserManagement = () => {
               </div>
 
               <div className="mt-8 flex justify-end gap-2 border-t border-white/5 pt-4">
-                <Button variant="ghost" size="sm" className="hover:bg-indigo-500/15 text-indigo-300 font-semibold" onClick={() => setEditUser(user)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hover:bg-indigo-500/15 text-indigo-300 font-semibold"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditUser(user);
+                  }}
+                >
                   <Edit className="w-4 h-4 mr-2" />
                   Configure
                 </Button>
-                <Button variant="ghost" size="sm" className="hover:bg-rose-500/15 text-rose-400 hover:text-rose-300" onClick={() => handleDelete(user.id)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hover:bg-rose-500/15 text-rose-400 hover:text-rose-300"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(user.id);
+                  }}
+                >
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -297,7 +363,7 @@ const UserManagement = () => {
 
       {/* Modern Floating Pagination Logics */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4 mt-12 bg-slate-900/60 p-3 rounded-2xl border border-white/5 w-max mx-auto backdrop-blur-md shadow-2xl">
+        <div className="flex items-center justify-center gap-4 mt-12 bg-slate-900/60 p-3 rounded-2xl border border-white/5 w-max mx-auto backdrop-blur-md shadow-none">
           <Button
             variant="outline"
             className="rounded-xl border-white/10 bg-slate-800/50 hover:bg-indigo-500/20 text-white w-10 h-10 p-0"
@@ -322,9 +388,9 @@ const UserManagement = () => {
 
       {/* Invite Flow Modal */}
       <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-        <DialogContent className="bg-[#0f172a] border border-indigo-500/20 text-white shadow-2xl shadow-indigo-900/50">
+        <DialogContent className="bg-[#0f172a] border border-indigo-500/20 text-white shadow-none">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-extrabold flex items-center gap-2">
+            <DialogTitle className="text-xl font-extrabold flex items-center gap-2">
               <div className="bg-indigo-500/20 p-2 rounded-xl text-indigo-400"><UserPlus className="w-6 h-6" /></div>
               Issue Invitation
             </DialogTitle>
@@ -373,7 +439,7 @@ const UserManagement = () => {
             <Button variant="ghost" className="hover:bg-white/5 text-slate-300" onClick={() => setIsInviteOpen(false)}>
               Discard
             </Button>
-            <Button className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold px-6 shadow-lg shadow-indigo-500/20" onClick={handleInvite} disabled={!inviteName.trim() || !inviteEmail.trim() || isInviting}>
+            <Button className="bg-white/10 hover:bg-white/15 text-white font-bold px-6 border border-white/10 shadow-none transition-colors" onClick={handleInvite} disabled={!inviteName.trim() || !inviteEmail.trim() || isInviting}>
               {isInviting ? "Transmitting..." : "Send Secure Invite"}
             </Button>
           </DialogFooter>
@@ -382,9 +448,9 @@ const UserManagement = () => {
 
       {/* Edit User Details Flow Modal */}
       <Dialog open={editUser !== null} onOpenChange={(open) => !open && setEditUser(null)}>
-        <DialogContent className="bg-[#0f172a] border border-blue-500/20 text-white shadow-2xl shadow-blue-900/50">
+        <DialogContent className="bg-[#0f172a] border border-blue-500/20 text-white shadow-none">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-extrabold flex items-center gap-2">
+            <DialogTitle className="text-xl font-extrabold flex items-center gap-2">
               <div className="bg-blue-500/20 p-2 rounded-xl text-blue-400"><Edit className="w-6 h-6" /></div>
               Configure Security Options
             </DialogTitle>
@@ -438,9 +504,142 @@ const UserManagement = () => {
             <Button variant="ghost" className="hover:bg-white/5 text-slate-300" onClick={() => setEditUser(null)}>
               Cancel
             </Button>
-            <Button className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 shadow-lg shadow-blue-500/20 shadow-inner" onClick={handleSaveEdit}>
+            <Button className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 shadow-none shadow-inner border border-blue-500/20" onClick={handleSaveEdit}>
               Update Identity Profile
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* User Profile Details Flow Modal */}
+      <Dialog open={profileUser !== null} onOpenChange={(open) => !open && setProfileUser(null)}>
+        <DialogContent className="bg-[#0f172a] border border-white/10 text-white shadow-none">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-extrabold flex items-center gap-2">
+              <div className="bg-white/5 p-2 rounded-xl">
+                <UserCheck className="w-6 h-6 text-blue-300" />
+              </div>
+              User Profile
+            </DialogTitle>
+          </DialogHeader>
+
+          {profileUser && (
+            <div className="space-y-5 py-2">
+              {profileLoading && (
+                <div className="flex items-center gap-2 text-[12px] text-slate-400">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  Loading latest profile data…
+                </div>
+              )}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="font-bold text-xl">{profileUser.name}</div>
+                  <div className="text-slate-400 text-sm">{profileUser.email}</div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge
+                    variant="outline"
+                    className={`${statusBadge[profileUser.status]} px-3 py-1 font-semibold capitalize rounded-md`}
+                  >
+                    {profileUser.status}
+                  </Badge>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-300 bg-slate-800/80 px-3 py-1.5 rounded-md border border-white/5">
+                    <Shield className="w-3.5 h-3.5 text-indigo-400" />
+                    <span className="capitalize">{roleLabel[profileUser.role]}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-300 bg-slate-800/80 px-3 py-1.5 rounded-md border border-white/5">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>Joined {profileUser.joinedAt}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-white/10 pt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                      userType
+                    </div>
+                    <div className="text-sm text-white/85">{profileUser?.userType || "—"}</div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                      purpose
+                    </div>
+                    <div className="text-sm text-white/85">{profileUser?.purpose || "—"}</div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                      communicationMode
+                    </div>
+                    <div className="text-sm text-white/85">{profileUser?.communicationMode || "—"}</div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                      institution
+                    </div>
+                    <div className="text-sm text-white/85">{profileUser?.institution || "—"}</div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                      address
+                    </div>
+                    <div className="text-sm text-white/85">{profileUser?.address || "—"}</div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                      updatedAt
+                    </div>
+                    <div className="text-sm text-white/85">{profileUser?.updatedAt || "—"}</div>
+                  </div>
+                </div>
+
+                <div className="mt-5 space-y-1.5">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    additionalInfo
+                  </div>
+                  <pre className="whitespace-pre-wrap break-words text-sm text-white/85 bg-white/5 border border-white/10 rounded-xl p-4 max-h-52 overflow-y-auto custom-scrollbar">
+                    {profileUser?.additionalInfo || "—"}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="border-t border-white/10 pt-4 mt-2 flex justify-between">
+            <div className="flex items-center gap-3">
+              {profileUser?.profileCompletionRequested ? (
+                <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/20 px-3 py-1">
+                  Profile Completion Requested
+                </Badge>
+              ) : profileUser?.profileCompleted ? (
+                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 px-3 py-1">
+                  Profile Completed
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-slate-500/10 text-slate-400 border-slate-500/20 px-3 py-1">
+                  Profile Not Completed
+                </Badge>
+              )}
+            </div>
+            <div className="flex gap-2">
+              {!profileUser?.profileCompleted && profileUser && (
+                <Button
+                  variant="outline"
+                  className={profileUser?.profileCompletionRequested 
+                    ? "border-amber-500/30 text-amber-400 hover:bg-amber-500/10" 
+                    : "border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10"
+                  }
+                  onClick={() => handleRequestProfileCompletion(profileUser.id, !profileUser?.profileCompletionRequested)}
+                >
+                  {profileUser?.profileCompletionRequested ? "Dismiss Request" : "Request Profile Completion"}
+                </Button>
+              )}
+              <Button variant="ghost" className="hover:bg-white/5 text-slate-300" onClick={() => setProfileUser(null)}>
+                Close
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

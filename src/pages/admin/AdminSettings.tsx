@@ -98,7 +98,7 @@ const Toggle = ({
     }`}
   >
     <span
-      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-none ring-0 transition duration-200 ease-in-out ${
         checked ? "translate-x-5" : "translate-x-0"
       }`}
     />
@@ -358,6 +358,9 @@ const AdminSettings = () => {
                     onChange={(e) => setIpWhitelist(e.target.value)}
                     placeholder={"192.168.1.1\n10.0.0.0/24"}
                     className="w-full rounded-xl bg-slate-800 border border-white/10 text-white text-sm px-4 py-3 h-28 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    spellCheck={false}
+                    autoComplete="off"
+                    autoCorrect="off"
                   />
                 </div>
               )}
@@ -385,7 +388,7 @@ const AdminSettings = () => {
                 <Input type="password" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} placeholder="••••••••" className="bg-slate-800 border-white/10 text-white w-60 focus-visible:ring-indigo-500" />
               </Field>
               <div className="pt-2">
-                <Button onClick={handlePasswordChange} className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-6 shadow-lg shadow-rose-500/20 border-0">
+                <Button onClick={handlePasswordChange} className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-6 border border-rose-500/30 shadow-none">
                   <Lock className="w-4 h-4 mr-2" /> Update Password
                 </Button>
               </div>
@@ -424,7 +427,7 @@ const AdminSettings = () => {
                       onClick={() => setDigestFrequency(f)}
                       className={`px-4 py-2 text-xs font-bold rounded-lg transition-all capitalize ${
                         digestFrequency === f
-                          ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md"
+                          ? "bg-white/10 text-white border border-white/10 shadow-none"
                           : "bg-slate-800 text-slate-400 hover:text-white border border-white/5"
                       }`}
                     >
@@ -587,7 +590,7 @@ const AdminSettings = () => {
                   onClick={() => setAuditFilter(f)}
                   className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all capitalize ${
                     auditFilter === f
-                      ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md"
+                      ? "bg-white/10 text-white border border-white/10 shadow-none"
                       : "bg-slate-800 text-slate-400 hover:text-white border border-white/5"
                   }`}
                 >
@@ -711,7 +714,7 @@ const AdminSettings = () => {
   };
 
   return (
-    <div className="bg-slate-950 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-indigo-950/40 via-slate-950 to-slate-950 min-h-screen p-6 -mx-6 -mt-6 xl:p-10 pb-20 text-slate-50 transition-all duration-300">
+    <div className="bg-slate-950 min-h-screen p-6 -mx-6 -mt-6 xl:p-10 pb-20 text-slate-50 transition-all duration-300">
 
       {/* ── Page Header ── */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-10 animate-in slide-in-from-top-4 duration-500">
@@ -720,7 +723,7 @@ const AdminSettings = () => {
             <Settings className="w-3.5 h-3.5 mr-1.5" />
             Admin Control Panel
           </Badge>
-          <h1 className="text-3xl lg:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 pb-1">
+          <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-white pb-1">
             Admin Settings
           </h1>
           <p className="text-slate-400 max-w-lg">
@@ -732,7 +735,7 @@ const AdminSettings = () => {
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="h-12 px-8 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-xl shadow-lg shadow-indigo-500/25 border-0 font-bold text-sm hover:scale-105 transition-transform"
+          className="h-12 px-8 bg-white/10 hover:bg-white/15 text-white rounded-xl border border-white/10 shadow-none font-bold text-sm transition-colors"
         >
           {saving ? (
             <><RefreshCw className="w-4 h-4 mr-2.5 animate-spin" />Saving…</>
@@ -758,7 +761,7 @@ const AdminSettings = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all whitespace-nowrap lg:w-full text-left ${
                     active
-                      ? "bg-gradient-to-r from-indigo-500/20 to-purple-500/10 text-indigo-300 border border-indigo-500/20"
+                      ? "bg-white/10 text-indigo-300 border border-white/10"
                       : "text-slate-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
@@ -789,7 +792,7 @@ const AdminSettings = () => {
               <Button
                 onClick={handleSave}
                 disabled={saving}
-                className="h-11 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-xl font-bold border-0 shadow-lg shadow-indigo-500/20"
+                className="h-11 px-6 bg-white/10 hover:bg-white/15 text-white rounded-xl font-bold border border-white/10 shadow-none"
               >
                 {saving ? <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />Saving…</> : <><Save className="w-4 h-4 mr-2" />Save Changes</>}
               </Button>
