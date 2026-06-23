@@ -11,7 +11,7 @@ const PrivacyPolicy = () => {
       title: "Politiki y'Ibanga",
       lastUpdated: "Iheruka kuvugururwa: Werurwe 2026",
       intro:
-        "Muri KSL Design Studio, twubahiriza ubwigenge bwawe. Iyi politiki y'ibanga isobanura uko dukusanya, dukoresha, kandi turinda amakuru yawe mugihe ukoresha urubuga rwacu.",
+        "Muri GestureMind, twubahiriza ubwigenge bwawe. Iyi politiki y'ibanga isobanura uko dukusanya, dukoresha, kandi turinda amakuru yawe mugihe ukoresha urubuga rwacu.",
       sections: [
         {
           heading: "1. Amakuru Dukusanya",
@@ -35,7 +35,7 @@ const PrivacyPolicy = () => {
       title: "Privacy Policy",
       lastUpdated: "Last Updated: March 2026",
       intro:
-        "At KSL Design Studio, we respect your privacy. This Privacy Policy explains how we collect, use, and protect your information when you use our website.",
+        "At GestureMind, we respect your privacy. This Privacy Policy explains how we collect, use, and protect your information when you use our website.",
       sections: [
         {
           heading: "1. Information We Collect",
@@ -59,7 +59,7 @@ const PrivacyPolicy = () => {
       title: "Politique de Confidentialité",
       lastUpdated: "Dernière mise à jour : Mars 2026",
       intro:
-        "Chez KSL Design Studio, nous respectons votre vie privée. Cette politique de confidentialité explique comment nous recueillons, utilisons et protégeons vos informations.",
+        "Chez GestureMind, nous respectons votre vie privée. Cette politique de confidentialité explique comment nous recueillons, utilisons et protégeons vos informations.",
       sections: [
         {
           heading: "1. Informations que nous recueillons",

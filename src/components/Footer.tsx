@@ -48,7 +48,7 @@ const Footer = () => {
         <div className="max-w-[1280px] mx-auto px-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[14px] text-muted-foreground">
           
           <div className="flex items-center gap-2">
-            <span className="font-display font-bold text-foreground">KSL</span>
+            <span className="font-script text-[20px] text-foreground">GestureMind</span>
             <span>© {currentYear}</span>
           </div>
 

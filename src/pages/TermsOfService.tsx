@@ -11,7 +11,7 @@ const TermsOfService = () => {
       title: "Amategeko y'Imikoreshereze",
       lastUpdated: "Iheruka kuvugururwa: Werurwe 2026",
       intro:
-        "Urakaza neza muri KSL Design Studio. Mugukoresha urubuga rwacu, wemeye gukurikiza amategeko n'amabwiriza akurikira.",
+        "Urakaza neza muri GestureMind. Mugukoresha urubuga rwacu, wemeye gukurikiza amategeko n'amabwiriza akurikira.",
       sections: [
         {
           heading: "1. Kwemerera Serivisi",
@@ -23,7 +23,7 @@ const TermsOfService = () => {
         },
         {
           heading: "3. Uburenganzira bw'Umutungo Mu by'Ubwenge",
-          body: "Ibiri kurubuga byose harimo inyandiko, amashusho, n'ibirango, ni umutungo wa KSL Design Studio kandi birinzwe n'amategeko.",
+          body: "Ibiri kurubuga byose harimo inyandiko, amashusho, n'ibirango, ni umutungo wa GestureMind kandi birinzwe n'amategeko.",
         },
         {
           heading: "4. Ubwishingizi n'Inshingano",
@@ -39,7 +39,7 @@ const TermsOfService = () => {
       title: "Terms of Service",
       lastUpdated: "Last Updated: March 2026",
       intro:
-        "Welcome to KSL Design Studio. By accessing or using our website and services, you agree to be bound by these Terms of Service.",
+        "Welcome to GestureMind. By accessing or using our website and services, you agree to be bound by these Terms of Service.",
       sections: [
         {
           heading: "1. Acceptance of Terms",
@@ -51,7 +51,7 @@ const TermsOfService = () => {
         },
         {
           heading: "3. Intellectual Property Rights",
-          body: "All content on this website, including texts, graphics, and logos, is the property of KSL Design Studio and is protected by applicable laws.",
+          body: "All content on this website, including texts, graphics, and logos, is the property of GestureMind and is protected by applicable laws.",
         },
         {
           heading: "4. Limitation of Liability",
@@ -67,7 +67,7 @@ const TermsOfService = () => {
       title: "Conditions d'Utilisation",
       lastUpdated: "Dernière mise à jour : Mars 2026",
       intro:
-        "Bienvenue sur KSL Design Studio. En accédant à notre site ou en l'utilisant, vous acceptez d'être lié par ces conditions d'utilisation.",
+        "Bienvenue sur GestureMind. En accédant à notre site ou en l'utilisant, vous acceptez d'être lié par ces conditions d'utilisation.",
       sections: [
         {
           heading: "1. Acceptation des conditions",
@@ -79,7 +79,7 @@ const TermsOfService = () => {
         },
         {
           heading: "3. Propriété intellectuelle",
-          body: "Tout le contenu de ce site web, y compris les textes, graphiques et logos, est la propriété de KSL Design Studio et est protégé par les lois applicables.",
+          body: "Tout le contenu de ce site web, y compris les textes, graphiques et logos, est la propriété de GestureMind et est protégé par les lois applicables.",
         },
         {
           heading: "4. Limitation de responsabilité",

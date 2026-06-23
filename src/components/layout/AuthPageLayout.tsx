@@ -16,7 +16,7 @@ export function AuthPageLayout({
   children,
   title,
   subtitle,
-  brandLabel = "KSL Interpreter",
+  brandLabel = "GestureMind",
   homeLabel = "Home",
   hideLeftPanel = false,
 }: AuthPageLayoutProps) {
@@ -65,10 +65,10 @@ export function AuthPageLayout({
       </div>
 
       {!hideLeftPanel && (
-        <aside className="relative hidden h-full w-[42%] shrink-0 flex-col bg-[#0B252E]/35 backdrop-blur-md text-white lg:flex z-10 border-r border-white/10">
+        <aside className="relative hidden h-full w-[42%] shrink-0 flex-col text-[#0B252E] lg:flex z-10 border-r border-[#0B252E]/10">
           <div className="absolute inset-0 bg-transparent" aria-hidden />
           <div className="relative z-10 flex h-full flex-col p-10 xl:p-14">
-            <Link to="/" className="text-[15px] tracking-wide text-white/90 hover:text-white">
+            <Link to="/" className="font-script text-[26px] text-[#0B252E]/80 hover:text-[#0B252E]">
               {brandLabel}
             </Link>
             <div className="flex flex-1 flex-col items-center justify-center">
@@ -79,7 +79,7 @@ export function AuthPageLayout({
               />
               <div className="auth-brand-mark" aria-hidden />
             </div>
-            <p className="text-[11px] text-white/35">© KSL {year}.</p>
+            <p className="font-script text-[14px] text-[#0B252E]/50">© GestureMind {year}.</p>
           </div>
         </aside>
       )}

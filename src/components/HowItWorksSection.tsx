@@ -34,7 +34,7 @@ const HowItWorksSection = () => {
         
         <div className="mb-16 border-b border-border pb-10">
           <h2 className="text-[36px] md:text-[48px] font-script leading-[1.15] mb-6 text-foreground">
-            How to Use KSL Interpreter
+            How to Use GestureMind
           </h2>
           <p className="text-[18px] text-foreground font-display font-medium leading-relaxed max-w-xl tracking-tight">
             Our intuitive system makes sign language translation accessible to everyone in just four simple steps. Follow this guide to get started.

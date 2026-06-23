@@ -31,7 +31,7 @@ const AboutSection = () => {
         
         <div className="mb-12">
           <h2 className="text-[36px] md:text-[48px] font-script leading-[1.15] mb-6 text-foreground">
-            About KSL Interpreter
+            About GestureMind
           </h2>
           <p className="text-[18px] md:text-[20px] text-foreground font-display font-medium leading-relaxed max-w-xl tracking-tight">
             KSL is an AI-powered platform dedicated to bridging the communication gap in Rwanda. We empower communication between the deaf and hearing communities through technology.

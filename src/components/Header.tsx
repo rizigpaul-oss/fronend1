@@ -39,11 +39,11 @@ const Header = () => {
     <>
       <header className="w-full z-40 relative flex items-center justify-between px-6 py-6 md:px-12 bg-transparent">
         {/* Left corner: Logo */}
-        <Link to="/" className="flex items-center gap-2 group select-none">
-          <img src={kslLogo} alt="KSL" className="h-7 w-auto object-contain brightness-95" />
-          <span className="font-script text-[28px] tracking-tight text-[#0B252E] lowercase leading-none">
-              ksl<span className="text-[#90DDF5]">.</span>
-            </span>
+        <Link to="/" className="flex items-center gap-3 group select-none">
+          <img src={kslLogo} alt="GestureMind" className="h-16 w-auto object-contain" />
+          <span className="font-script text-[36px] text-[#0B252E] leading-none">
+            GestureMind
+          </span>
         </Link>
 
         {/* Right corner: Button group */}
@@ -99,10 +99,10 @@ const Header = () => {
               
               {/* Top Bar */}
               <div className="flex items-center justify-between">
-                <Link to="/" className="flex items-center gap-2 select-none" onClick={() => setIsMenuOpen(false)}>
-                  <img src={kslLogo} alt="KSL" className="h-7 w-auto object-contain brightness-95" />
-                  <span className="font-display font-bold text-[26px] tracking-tight text-[#0B252E] lowercase leading-none">
-                    ksl<span className="text-[#90DDF5] font-bold">.</span>
+                <Link to="/" className="flex items-center gap-3 select-none" onClick={() => setIsMenuOpen(false)}>
+                  <img src={kslLogo} alt="GestureMind" className="h-16 w-auto object-contain" />
+                  <span className="font-script text-[36px] text-[#0B252E] leading-none">
+                    GestureMind
                   </span>
                 </Link>
 

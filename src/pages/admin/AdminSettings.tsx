@@ -59,12 +59,12 @@ const tabs: { id: Tab; label: string; icon: typeof Settings; badge?: string }[] 
 
 /* ─── Fake audit entries ─────────────────────────────────────── */
 const auditLogs = [
-  { id: 1, action: "Admin login",                  user: "admin@ksl.rw",    time: "2 min ago",   type: "auth"    },
-  { id: 2, action: "Gesture library updated",      user: "admin@ksl.rw",    time: "18 min ago",  type: "content" },
-  { id: 3, action: "User role changed → admin",    user: "admin@ksl.rw",    time: "1 hour ago",  type: "user"    },
-  { id: 4, action: "API rate-limit modified",      user: "admin@ksl.rw",    time: "3 hours ago", type: "api"     },
-  { id: 5, action: "Backup triggered manually",    user: "system",          time: "Yesterday",   type: "system"  },
-  { id: 6, action: "Email template updated",       user: "admin@ksl.rw",    time: "2 days ago",  type: "content" },
+  { id: 1, action: "Admin login",                  user: "admin@gesturemind.rw",    time: "2 min ago",   type: "auth"    },
+  { id: 2, action: "Gesture library updated",      user: "admin@gesturemind.rw",    time: "18 min ago",  type: "content" },
+  { id: 3, action: "User role changed → admin",    user: "admin@gesturemind.rw",    time: "1 hour ago",  type: "user"    },
+  { id: 4, action: "API rate-limit modified",      user: "admin@gesturemind.rw",    time: "3 hours ago", type: "api"     },
+  { id: 5, action: "Backup triggered manually",    user: "system",                  time: "Yesterday",   type: "system"  },
+  { id: 6, action: "Email template updated",       user: "admin@gesturemind.rw",    time: "2 days ago",  type: "content" },
   { id: 7, action: "New admin account created",    user: "superadmin",      time: "3 days ago",  type: "user"    },
   { id: 8, action: "System maintenance scheduled", user: "system",          time: "4 days ago",  type: "system"  },
 ];
@@ -170,7 +170,7 @@ const AdminSettings = () => {
   const [saving, setSaving] = useState(false);
 
   /* ── General ── */
-  const [siteName,       setSiteName]       = useState("KSL Design Studio");
+  const [siteName,       setSiteName]       = useState("GestureMind");
   const [siteTagline,    setSiteTagline]    = useState("Kinyarwanda Sign Language Platform");
   const [maintenanceMode,setMaintenanceMode]= useState(false);
   const [debugMode,      setDebugMode]      = useState(false);
@@ -195,7 +195,7 @@ const AdminSettings = () => {
   const [emailOnError,     setEmailOnError]     = useState(true);
   const [emailOnLogin,     setEmailOnLogin]     = useState(false);
   const [slackWebhook,     setSlackWebhook]     = useState("");
-  const [notifEmail,       setNotifEmail]       = useState("admin@ksl.rw");
+  const [notifEmail,       setNotifEmail]       = useState("admin@gesturemind.rw");
   const [digestFrequency,  setDigestFrequency]  = useState("daily");
 
   /* ── System ── */
@@ -209,11 +209,11 @@ const AdminSettings = () => {
 
   /* ── API ── */
   const [apiKeyVisible,  setApiKeyVisible]  = useState(false);
-  const [apiKey]                            = useState("sk-ksl-••••••••••••••••••••••••••••••");
-  const [apiKeyReal]                        = useState("sk-ksl-a1b2c3d4e5f6-DEMO-KEY-ONLY");
+  const [apiKey]                            = useState("sk-gm-••••••••••••••••••••••••••••••");
+  const [apiKeyReal]                        = useState("sk-gm-a1b2c3d4e5f6-DEMO-KEY-ONLY");
   const [webhookUrl,     setWebhookUrl]     = useState("");
   const [apiRateLimit,   setApiRateLimit]   = useState("1000");
-  const [corsOrigins,    setCorsOrigins]    = useState("https://ksl.rw");
+  const [corsOrigins,    setCorsOrigins]    = useState("https://gesturemind.rw");
 
   /* ── Audit filter ── */
   const [auditFilter, setAuditFilter] = useState<"all" | "auth" | "content" | "user" | "api" | "system">("all");
